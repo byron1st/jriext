@@ -1,0 +1,6 @@
++E+java/io/PipedInputStream,+V+read()I
++X+java/io/PipedInputStream,+V+read()I
++E+java/io/OutputStream,+V+write([B)V
++X+java/io/OutputStream,+V+write([B)V
++E+java/io/PipedInputStream,+V+receive([BII)V
++X+java/io/PipedInputStream,+V+receive([BII)V

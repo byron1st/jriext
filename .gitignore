@@ -1,0 +1,8 @@
+testDOT.dot
+testDOT_edges.csv
+testDOT_nodes.csv
+testRefined.txt
+.gradle
+build
+cache
+gradle

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/jriext.iml" filepath="$PROJECT_DIR$/.idea/modules/jriext.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/jriext_main.iml" filepath="$PROJECT_DIR$/.idea/modules/jriext_main.iml" group="jriext" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/jriext_test.iml" filepath="$PROJECT_DIR$/.idea/modules/jriext_test.iml" group="jriext" />
+    </modules>
+  </component>
+</project>

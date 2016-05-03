@@ -1,0 +1,1 @@
++X+java/lang/Thread,+V+init(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;JLjava/security/AccessControlContext;)V,{!target:Ljava/lang/Runnable;:java/lang/Object:+V+getClass()Ljava/lang/Class;:java/lang/Class:+V+getName()Ljava/lang/String;},{!target:Ljava/lang/Runnable;:java/lang/Object:+V+hashCode()I}
