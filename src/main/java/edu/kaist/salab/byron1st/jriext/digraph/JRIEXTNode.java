@@ -1,4 +1,4 @@
-package edu.kaist.salab.jriext.digraph;
+package edu.kaist.salab.byron1st.jriext.digraph;
 
 import java.util.ArrayList;
 

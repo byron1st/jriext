@@ -1,14 +1,14 @@
-package edu.kaist.salab.jriext;
+package edu.kaist.salab.byron1st.jriext;
 
 /**
  * Created by byron1st on 2015. 11. 13..
  */
 
-import edu.kaist.salab.jriext.digraph.DOTGenApp;
-import edu.kaist.salab.jriext.digraph.JRIEXTGraph;
-import edu.kaist.salab.jriext.instrumentation.C;
-import edu.kaist.salab.jriext.instrumentation.InstApp;
-import edu.kaist.salab.jriext.instrumentation.MonitoringUnit;
+import edu.kaist.salab.byron1st.jriext.digraph.DOTGenApp;
+import edu.kaist.salab.byron1st.jriext.digraph.JRIEXTGraph;
+import edu.kaist.salab.byron1st.jriext.instrumentation.C;
+import edu.kaist.salab.byron1st.jriext.instrumentation.MonitoringUnit;
+import edu.kaist.salab.byron1st.jriext.instrumentation.InstApp;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

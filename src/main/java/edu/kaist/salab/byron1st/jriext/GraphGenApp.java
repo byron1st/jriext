@@ -1,9 +1,9 @@
-package edu.kaist.salab.jriext;
+package edu.kaist.salab.byron1st.jriext;
 
-import edu.kaist.salab.jriext.digraph.JRIEXTEdge;
-import edu.kaist.salab.jriext.digraph.JRIEXTGraph;
-import edu.kaist.salab.jriext.digraph.JRIEXTNode;
-import edu.kaist.salab.jriext.instrumentation.C;
+import edu.kaist.salab.byron1st.jriext.digraph.JRIEXTGraph;
+import edu.kaist.salab.byron1st.jriext.digraph.JRIEXTEdge;
+import edu.kaist.salab.byron1st.jriext.digraph.JRIEXTNode;
+import edu.kaist.salab.byron1st.jriext.instrumentation.C;
 
 import java.io.BufferedReader;
 import java.io.File;

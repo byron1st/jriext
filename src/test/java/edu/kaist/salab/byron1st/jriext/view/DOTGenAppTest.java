@@ -1,10 +1,10 @@
-package edu.kaist.salab.jriext.view;
+package edu.kaist.salab.byron1st.jriext.view;
 
-import edu.kaist.salab.jriext.digraph.DOTGenApp;
-import edu.kaist.salab.jriext.GraphGenApp;
-import edu.kaist.salab.jriext.digraph.JRIEXTGraph;
-import edu.kaist.salab.jriext.instrumentation.InstApp;
-import edu.kaist.salab.jriext.instrumentation.MonitoringUnit;
+import edu.kaist.salab.byron1st.jriext.GraphGenApp;
+import edu.kaist.salab.byron1st.jriext.digraph.DOTGenApp;
+import edu.kaist.salab.byron1st.jriext.digraph.JRIEXTGraph;
+import edu.kaist.salab.byron1st.jriext.instrumentation.InstApp;
+import edu.kaist.salab.byron1st.jriext.instrumentation.MonitoringUnit;
 import org.junit.BeforeClass;
 import org.junit.Test;
 

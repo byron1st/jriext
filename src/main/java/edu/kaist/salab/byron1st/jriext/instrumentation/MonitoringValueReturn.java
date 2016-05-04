@@ -1,4 +1,4 @@
-package edu.kaist.salab.jriext.instrumentation;
+package edu.kaist.salab.byron1st.jriext.instrumentation;
 
 /**
  * Created by byron1st on 2016. 1. 14..

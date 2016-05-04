@@ -1,4 +1,4 @@
-package edu.kaist.salab.jriext.instrumentation;
+package edu.kaist.salab.byron1st.jriext.instrumentation;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
