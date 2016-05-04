@@ -1,1 +1,0 @@
-+E+java/io/ObjectOutputStream,+V+writeObject(Ljava/lang/Object;)V,{@0:Ljava/lang/Object;:java/lang/Object:+V+getClass()Ljava/lang/Class;:java/lang/Class:+V+getName()Ljava/lang/String;},{@0:Ljava/lang/Object;:java/lang/Object:+V+hashCode()I}

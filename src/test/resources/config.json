@@ -1,0 +1,7 @@
+{
+  "classpaths": [
+    "path/to/classpath1",
+    "path/to/classpath2"
+  ],
+  "monitoringUnits": "path/to/monitoringUnits"
+}
