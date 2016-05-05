@@ -9,6 +9,7 @@ public class MonitoringValueMethod extends MonitoringValue {
     private String methodDesc;
     private String returnType;
 
+    @Deprecated
     public MonitoringValueMethod(String className, String methodNameDesc) {
         //TODO: Signal들을 어디서 제거할지 (여기 또는 InstApp) 결정
         this(methodNameDesc.startsWith(C.VIRTUAL), className, methodNameDesc.substring(C.SSIZE));

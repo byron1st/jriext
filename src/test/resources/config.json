@@ -1,7 +1,6 @@
 {
   "classpaths": [
-    "path/to/classpath1",
-    "path/to/classpath2"
+    "/Users/byron1st/Documents/Workspace/IntelliJProjects/jriext/src/test/resources/bin"
   ],
-  "monitoringUnits": "path/to/monitoringUnits"
+  "monitoringUnits": "/Users/byron1st/Documents/Workspace/IntelliJProjects/jriext/src/test/resources/monitoringUnits.txt"
 }

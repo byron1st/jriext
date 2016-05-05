@@ -1,5 +1,7 @@
 package edu.kaist.salab.byron1st.jriext;
 
+import edu.kaist.salab.byron1st.jriext.instrumentation.InstApp;
+import edu.kaist.salab.byron1st.jriext.instrumentation.MonitoringUnit;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -11,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 /**
  * Created by byron1st on 2016. 5. 4..
@@ -40,6 +43,21 @@ public class JRiExtRevApp {
         return new ImmutablePair<>(classpaths, monitoringUnitsFile);
     }
 
+    private static ArrayList<Path> extractClasspathList(JSONArray jsonArray) throws ConfigFileException {
+        ArrayList<Path> list = new ArrayList<>();
+        for (Object obj : jsonArray) {
+            Path classpath = Paths.get((String) obj);
+            if (!Files.exists(classpath) || !Files.isDirectory(classpath)) throw new ConfigFileException("A classpath does not exists.");
+            list.add(classpath);
+        }
+        return list;
+    }
+
+    private static void handleException(Exception e) {
+        System.out.println(e.getMessage());
+        e.printStackTrace();
+    }
+
     /**
      * config.json
      * {
@@ -55,14 +73,27 @@ public class JRiExtRevApp {
     public static void main(String[] args) {
         try {
             ImmutablePair<JSONArray, String> parsedValues = validateConfig(args);
-        } catch (ConfigFileException e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
-        }
+            Path monitoringUnitsFilePath = Paths.get(parsedValues.getRight());
+            if (!Files.exists(monitoringUnitsFilePath) || !Files.isRegularFile(monitoringUnitsFilePath)) throw new ConfigFileException("A monitoring units file is wrong.");
+
+            ArrayList<Path> classpathList = extractClasspathList(parsedValues.getLeft());
+            ArrayList<MonitoringUnit> monitoringUnits = InstApp.parse(monitoringUnitsFilePath);
+
+            classpathList.forEach((classpath) -> {
+                try {
+                    InstApp.getInstance().instrument(classpath, monitoringUnits, false);
+                } catch (InstApp.InstrumentationException e) { handleException(e); }
+            });
+        } catch (ConfigFileException | InstApp.ParseMonitoringUnitsException e) { handleException(e); }
     }
 
     //Test method
-    static void testValidateConfig(String[] args) throws ConfigFileException {
-        validateConfig(args);
+    static ImmutablePair<JSONArray, String> testValidateConfig(String[] args) throws ConfigFileException {
+        return validateConfig(args);
+    }
+
+    //Test method
+    static ArrayList<Path> testExtractClasspathList(String[] args) throws ConfigFileException {
+        return extractClasspathList(validateConfig(args).getLeft());
     }
 }

@@ -26,4 +26,11 @@ public class JRiExtRevAppTest {
         JRiExtRevApp.testValidateConfig(correctArgs);
     }
 
+    @Test
+    public void testExtractClasspathList() throws Exception {
+        String[] correctArgs = {configFile.toString()};
+
+        JRiExtRevApp.testExtractClasspathList(correctArgs);
+    }
+
 }
