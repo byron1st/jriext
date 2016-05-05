@@ -7,11 +7,11 @@ import org.objectweb.asm.Opcodes;
 /**
  * Created by byron1st on 2016. 1. 8..
  */
-public class JRIEXTClassVisitor extends ClassVisitor implements Opcodes{
+class JRIEXTClassVisitor extends ClassVisitor implements Opcodes{
     private MonitoringUnit monitoringUnit;
     private boolean isDebugMode;
 
-    public JRIEXTClassVisitor(ClassVisitor cv, MonitoringUnit monitoringUnit, boolean isDebugMode) {
+    JRIEXTClassVisitor(ClassVisitor cv, MonitoringUnit monitoringUnit, boolean isDebugMode) {
         super(ASM5, cv);
         this.monitoringUnit = monitoringUnit;
         this.isDebugMode = isDebugMode;

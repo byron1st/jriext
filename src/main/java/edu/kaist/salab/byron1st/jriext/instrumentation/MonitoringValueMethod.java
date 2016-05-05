@@ -9,12 +9,6 @@ public class MonitoringValueMethod extends MonitoringValue {
     private String methodDesc;
     private String returnType;
 
-    @Deprecated
-    public MonitoringValueMethod(String className, String methodNameDesc) {
-        //TODO: Signal들을 어디서 제거할지 (여기 또는 InstApp) 결정
-        this(methodNameDesc.startsWith(C.VIRTUAL), className, methodNameDesc.substring(C.SSIZE));
-    }
-
     public MonitoringValueMethod(boolean isVirtual, String className, String methodNameDesc) {
         super(className);
         this.isVirtual = isVirtual;
@@ -23,14 +17,6 @@ public class MonitoringValueMethod extends MonitoringValue {
         this.methodName = methodNameDesc.substring(0, index0);
         this.methodDesc = methodNameDesc.substring(index0);
         this.returnType = methodNameDesc.substring(index1 + 1);
-    }
-
-    public MonitoringValueMethod(boolean isVirtual, String className, String methodName, String methodDesc, String returnType) {
-        super(className);
-        this.isVirtual = isVirtual;
-        this.methodName = methodName;
-        this.methodDesc = methodDesc;
-        this.returnType = returnType;
     }
 
     public boolean isVirtual() {

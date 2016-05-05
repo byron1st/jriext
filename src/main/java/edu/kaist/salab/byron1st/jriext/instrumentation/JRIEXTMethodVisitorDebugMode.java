@@ -8,10 +8,10 @@ import org.objectweb.asm.commons.AdviceAdapter;
 /**
  * Created by byron1st on 2016. 1. 14..
  */
-public class JRIEXTMethodVisitorDebugMode extends AdviceAdapter implements Opcodes{
+class JRIEXTMethodVisitorDebugMode extends AdviceAdapter implements Opcodes{
     private MonitoringUnit monitoringUnit;
 
-    public JRIEXTMethodVisitorDebugMode(MethodVisitor mv, int access, String name, String desc, MonitoringUnit monitoringUnit) {
+    JRIEXTMethodVisitorDebugMode(MethodVisitor mv, int access, String name, String desc, MonitoringUnit monitoringUnit) {
         super(ASM5, mv, access, name, desc);
         this.monitoringUnit = monitoringUnit;
     }

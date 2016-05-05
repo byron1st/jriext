@@ -22,15 +22,25 @@ import java.util.HashSet;
 public class InstApp {
     private static InstApp instApp = new InstApp();
     public static InstApp getInstance() { return instApp; }
-    public static class ParseMonitoringUnitsException extends Exception {
+
+    public static final class ParseMonitoringUnitsException extends Exception {
         ParseMonitoringUnitsException(String message) { super(message); }
     }
-    public static class InstrumentationException extends Exception {
+    public static final class InstrumentationException extends Exception {
         InstrumentationException(String message) { super(message); }
     }
-    public static String defaultDirName = System.getProperty("user.dir") + File.separator + "cache";
-    public static final Path CACHE_ROOT = Paths.get(defaultDirName);
-    public static void deleteCacheFolderIfExists() {
+
+    public static final String defaultDirName = System.getProperty("user.dir") + File.separator + "cache";
+
+    private static final Path CACHE_ROOT = Paths.get(defaultDirName);
+    private static final String VKIND_FIELD = "F";
+    private static final String VKIND_RETURN = "R";
+    private static final String VKIND_PARAMETER = "P";
+    private static final String LOC_ENTER= "E";
+    private static final String LOC_EXIT= "X";
+    private static final String LOC_BOTH= "B";
+
+    private static void deleteCacheFolderIfExists() {
         if(Files.exists(CACHE_ROOT)) {
             try {
                 Files.walkFileTree(CACHE_ROOT, new FileVisitor<Path>() {
@@ -64,14 +74,6 @@ public class InstApp {
     static {
         deleteCacheFolderIfExists();
     }
-
-//    private static final Path CACHE_ROOT = Paths.get(System.getProperty("user.dir"), "cache");
-    private static final String VKIND_FIELD = "F";
-    private static final String VKIND_RETURN = "R";
-    private static final String VKIND_PARAMETER = "P";
-    private static final String LOC_ENTER= "E";
-    private static final String LOC_EXIT= "X";
-    private static final String LOC_BOTH= "B";
 
     public static ArrayList<MonitoringUnit> parse(Path monitoringUnitsJson) throws ParseMonitoringUnitsException {
         JSONArray monitoringUnitsJsonList;
@@ -150,72 +152,6 @@ public class InstApp {
 
     private static boolean isObject(String type) {
         return type.startsWith("L");
-    }
-
-    @Deprecated
-    public static ArrayList<MonitoringUnit> getMonitoringUnitsFromFile(Path inputFile) throws IOException {
-        ArrayList<MonitoringUnit> monitoringUnitList = new ArrayList<>();
-        try (BufferedReader br = Files.newBufferedReader(inputFile)) {
-            String monitoringUnitsString;
-            while((monitoringUnitsString = br.readLine()) != null) {
-                if(!monitoringUnitsString.startsWith(C.ENTER) && !monitoringUnitsString.startsWith(C.EXIT)) throw new IOException("The input file's format is wrong.");
-                String[] elements = monitoringUnitsString.split(C.DDELIM);
-                if(elements.length < 2) throw new IOException("The input file's format is wrong.");
-                String className = elements[0].substring(C.SSIZE);
-                boolean isVirtual = elements[1].startsWith(C.VIRTUAL);
-                String methodNameDesc = elements[1].substring(C.SSIZE);
-
-                MonitoringUnit monitoringUnit = new MonitoringUnit(className, methodNameDesc, isVirtual);
-                monitoringUnit.setEnter(monitoringUnitsString.startsWith(C.ENTER));
-
-                for(int i = 2; i < elements.length; i++) {
-                    if(!elements[i].startsWith(C.VO) || !elements[i].endsWith(C.VC)) throw new IOException("The input file's format is wrong.");
-                    elements[i] = elements[i].substring(1, elements[i].length() - 1);
-                    String[] elementsToBeMonitored = elements[i].split(C.VDELIM);
-                    if(elementsToBeMonitored.length == 0 || elementsToBeMonitored.length % 2 != 0) throw new IOException("The input file's format is wrong.");
-
-                    MonitoringValue newValue = null;
-                    if(elementsToBeMonitored[0].startsWith(C.VFIELD)
-                            || elementsToBeMonitored[0].startsWith(C.VPARAMETER)
-                            || elementsToBeMonitored[0].startsWith(C.VRETURN)) {
-                        boolean isObject = elementsToBeMonitored[1].startsWith("L");
-                        if((isObject && elementsToBeMonitored.length <= 2)
-                                || !isObject && elementsToBeMonitored.length > 2)
-                            throw new IOException("The input file's format is wrong.");
-
-                        if(elementsToBeMonitored[0].startsWith(C.VFIELD))
-                            newValue = new MonitoringValueField(elementsToBeMonitored[0].substring(1), elementsToBeMonitored[1]);
-                        else if (elementsToBeMonitored[0].startsWith(C.VPARAMETER))
-                            newValue = new MonitoringValueParameter(Integer.parseInt(elementsToBeMonitored[0].substring(1)), elementsToBeMonitored[1]);
-                        else
-                            newValue = new MonitoringValueReturn(elementsToBeMonitored[1]);
-
-                        if(isObject) {
-                            MonitoringValueMethod tempValue = new MonitoringValueMethod(elementsToBeMonitored[2], elementsToBeMonitored[3]);
-                            newValue.setNextMethod(tempValue);
-                            addNextMethods(elementsToBeMonitored, tempValue, 4);
-                        }
-                    } else {
-                        newValue = new MonitoringValueMethod(elementsToBeMonitored[0], elementsToBeMonitored[1]);;
-
-                        MonitoringValueMethod tempValue = (MonitoringValueMethod) newValue;
-                        addNextMethods(elementsToBeMonitored, tempValue, 2);
-                    }
-                    monitoringUnit.addMonitoringValue(newValue);
-                }
-                monitoringUnitList.add(monitoringUnit);
-            }
-        }
-        return monitoringUnitList;
-    }
-
-    @Deprecated
-    private static void addNextMethods(String[] elementsToBeMonitored, MonitoringValueMethod beginValue, int beginIndex) {
-        for(int k = beginIndex; k < elementsToBeMonitored.length; k += 2) {
-            MonitoringValueMethod nextMethod = new MonitoringValueMethod(elementsToBeMonitored[k], elementsToBeMonitored[k + 1]);
-            beginValue.setNextMethod(nextMethod);
-            beginValue = nextMethod;
-        }
     }
 
 

@@ -9,10 +9,14 @@ import org.objectweb.asm.commons.AdviceAdapter;
 /**
  * Created by byron1st on 2016. 1. 8..
  */
-public class JRIEXTMethodVisitor extends AdviceAdapter implements Opcodes{
-    public static MonitoringValueMethod getThreadID = new MonitoringValueMethod(false, "java/lang/Thread", "currentThread()Ljava/lang/Thread;");
-    public static MonitoringValueMethod getThreadName = new MonitoringValueMethod(false, "java/lang/Thread", "currentThread()Ljava/lang/Thread;");
-    public static MonitoringValueMethod getExecutionTime = new MonitoringValueMethod(false, "java/lang/System", "nanoTime()J");
+class JRIEXTMethodVisitor extends AdviceAdapter implements Opcodes{
+    private static final String ENTER = "+E+";
+    private static final String EXIT = "+X+";
+    private static final String DDELIM = ",";
+
+    private static MonitoringValueMethod getThreadID = new MonitoringValueMethod(false, "java/lang/Thread", "currentThread()Ljava/lang/Thread;");
+    private static MonitoringValueMethod getThreadName = new MonitoringValueMethod(false, "java/lang/Thread", "currentThread()Ljava/lang/Thread;");
+    private static MonitoringValueMethod getExecutionTime = new MonitoringValueMethod(false, "java/lang/System", "nanoTime()J");
     static {
         getThreadID.setNextMethod(new MonitoringValueMethod(true, "java/lang/Object", "hashCode()I"));
         getThreadName.setNextMethod(new MonitoringValueMethod(true, "java/lang/Thread", "getName()Ljava/lang/String;"));
@@ -20,7 +24,7 @@ public class JRIEXTMethodVisitor extends AdviceAdapter implements Opcodes{
 
     private MonitoringUnit monitoringUnit;
 
-    public JRIEXTMethodVisitor(MethodVisitor mv, int access, String name, String desc, MonitoringUnit monitoringUnit) {
+    JRIEXTMethodVisitor(MethodVisitor mv, int access, String name, String desc, MonitoringUnit monitoringUnit) {
         super(ASM5, mv, access, name, desc);
         this.monitoringUnit = monitoringUnit;
     }
@@ -42,8 +46,8 @@ public class JRIEXTMethodVisitor extends AdviceAdapter implements Opcodes{
         mv.visitJumpInsn(IFNULL, ifSystemOutNull);
         logBeginPrint();
 
-        if(monitoringUnit.isEnter()) logStringValue(C.ENTER);
-        else logStringValue(C.EXIT);
+        if(monitoringUnit.isEnter()) logStringValue(ENTER);
+        else logStringValue(EXIT);
 
         log(getExecutionTime, true);
         logDelimiter();
@@ -53,7 +57,7 @@ public class JRIEXTMethodVisitor extends AdviceAdapter implements Opcodes{
         logDelimiter();
         logObjectId();
         logDelimiter();
-        logStringValue(monitoringUnit.getClassName() + C.DDELIM + monitoringUnit.getMethodName() + monitoringUnit.getMethodDesc());
+        logStringValue(monitoringUnit.getClassName() + DDELIM + monitoringUnit.getMethodName() + monitoringUnit.getMethodDesc());
         logEndPrint();
 
         for (MonitoringValue monitoringValue : monitoringUnit.getMonitoringValues()) {
@@ -93,7 +97,7 @@ public class JRIEXTMethodVisitor extends AdviceAdapter implements Opcodes{
         mv.visitJumpInsn(GOTO, endLabel);
         mv.visitLabel(ifFieldNull);
         mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-        mv.visitLdcInsn(C.DDELIM + "null");
+        mv.visitLdcInsn(DDELIM + "null");
         mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "print", "(Ljava/lang/String;)V", false);
         mv.visitLabel(endLabel);
     }
@@ -147,7 +151,7 @@ public class JRIEXTMethodVisitor extends AdviceAdapter implements Opcodes{
     }
 
     private void logDelimiter() {
-        mv.visitLdcInsn(C.DDELIM);
+        mv.visitLdcInsn(DDELIM);
         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false);
     }
 
