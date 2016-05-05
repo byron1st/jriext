@@ -25,9 +25,8 @@ public class JRiExtRevApp {
         }
     }
 
-    private static ImmutablePair<JSONArray, String> validateConfig(String[] args) throws ConfigFileException {
-        if (args.length == 0) throw new ConfigFileException("A config file is not determined.");
-        Path config = Paths.get(args[0]);
+    private static ImmutablePair<JSONArray, String> validateConfig(String configFilePath) throws ConfigFileException {
+        Path config = Paths.get(configFilePath);
         if (!Files.exists(config)) throw new ConfigFileException("A config file does not exists.");
         JSONArray classpaths;
         String monitoringUnitsFile;
@@ -58,6 +57,78 @@ public class JRiExtRevApp {
         e.printStackTrace();
     }
 
+    private ArrayList<Path> classpathList;
+    private ArrayList<MonitoringUnit> monitoringUnits;
+
+    public JRiExtRevApp(String configFilePath) {
+        initialize(configFilePath);
+    }
+
+    public void instrument() {
+        assert classpathList != null;
+        classpathList.forEach((classpath) -> {
+            try {
+                InstApp.getInstance().instrument(classpath, monitoringUnits, false);
+            } catch (InstApp.InstrumentationException e) { handleException(e); }
+        });
+    }
+
+    /*
+    private void run() {
+            statusLabel.setText("::RUNNING::");
+            mainBtn.setText(STOP);
+            generateBtn.setDisable(true);
+            viewBtn.setDisable(true);
+            try {
+                if(isCached) {
+                    Path tempLogs = Paths.get(System.getProperty("user.dir"), mainClassNameString + "_temp.txt");
+                    if(Files.notExists(tempLogs))
+                        Files.createFile(tempLogs);
+                    logTempFile = tempLogs.toFile();
+
+                    String xbootclasspathCmd = InstApp.defaultDirName + ":";
+                    Iterator<String> iterator = jarFiles.iterator();
+                    while(iterator.hasNext()) {
+                        xbootclasspathCmd += iterator.next();
+                        if(iterator.hasNext()) xbootclasspathCmd += ":";
+                    }
+
+                    ProcessBuilder builder = new ProcessBuilder("java",
+                            "-Xbootclasspath/p:" + xbootclasspathCmd,
+                            mainClassName.replaceAll("/", "."));
+                    builder.directory(new File(InstApp.defaultDirName));
+                    builder.redirectErrorStream(true);
+                    builder.redirectOutput(logTempFile);
+                    process = builder.start();
+                } else
+                    throw new IOException();
+            } catch (IOException e) {
+                showException(e, "An exception occurs during the execution.");
+            }
+        }
+
+        private void stop() {
+            statusLabel.setText("::PREPARED::");
+            mainBtn.setText(RUN);
+            generateBtn.setDisable(false);
+            process.destroy();
+
+            if(!isDebugMode.isSelected())
+                refineLogTemp(logTempFile, logFile);
+        }
+     */
+
+    private void initialize(String configFilePath) {
+        try {
+            ImmutablePair<JSONArray, String> parsedValues = validateConfig(configFilePath);
+            Path monitoringUnitsFilePath = Paths.get(parsedValues.getRight());
+            if (!Files.exists(monitoringUnitsFilePath) || !Files.isRegularFile(monitoringUnitsFilePath)) throw new ConfigFileException("A monitoring units file is wrong.");
+
+            classpathList = extractClasspathList(parsedValues.getLeft());
+            monitoringUnits = InstApp.parse(monitoringUnitsFilePath);
+        } catch (ConfigFileException | InstApp.ParseMonitoringUnitsException e) { handleException(e); }
+    }
+
     /**
      * config.json
      * {
@@ -71,29 +142,21 @@ public class JRiExtRevApp {
      * @param args
      */
     public static void main(String[] args) {
-        try {
-            ImmutablePair<JSONArray, String> parsedValues = validateConfig(args);
-            Path monitoringUnitsFilePath = Paths.get(parsedValues.getRight());
-            if (!Files.exists(monitoringUnitsFilePath) || !Files.isRegularFile(monitoringUnitsFilePath)) throw new ConfigFileException("A monitoring units file is wrong.");
+        if (args.length == 0) {
+            try { throw new ConfigFileException("A config file is not determined.");
+            } catch (ConfigFileException e) { handleException(e); }
+        }
 
-            ArrayList<Path> classpathList = extractClasspathList(parsedValues.getLeft());
-            ArrayList<MonitoringUnit> monitoringUnits = InstApp.parse(monitoringUnitsFilePath);
-
-            classpathList.forEach((classpath) -> {
-                try {
-                    InstApp.getInstance().instrument(classpath, monitoringUnits, false);
-                } catch (InstApp.InstrumentationException e) { handleException(e); }
-            });
-        } catch (ConfigFileException | InstApp.ParseMonitoringUnitsException e) { handleException(e); }
+        new JRiExtRevApp(args[0]);
     }
 
     //Test method
     static ImmutablePair<JSONArray, String> testValidateConfig(String[] args) throws ConfigFileException {
-        return validateConfig(args);
+        return validateConfig(args[0]);
     }
 
     //Test method
     static ArrayList<Path> testExtractClasspathList(String[] args) throws ConfigFileException {
-        return extractClasspathList(validateConfig(args).getLeft());
+        return extractClasspathList(validateConfig(args[0]).getLeft());
     }
 }
