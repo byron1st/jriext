@@ -64,4 +64,10 @@ public class MonitoringUnit {
     public ArrayList<MonitoringValue> getMonitoringValues() {
         return monitoringValues;
     }
+
+    public MonitoringUnit duplicateThisWithOppositeLocation() {
+        MonitoringUnit monitoringUnit = new MonitoringUnit(this.className, this.methodName + this.methodDesc, this.isVirtual);
+        monitoringUnit.setEnter(!this.isEnter);
+        return monitoringUnit;
+    }
 }

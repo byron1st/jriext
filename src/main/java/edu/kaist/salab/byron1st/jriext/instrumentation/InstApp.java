@@ -1,5 +1,7 @@
 package edu.kaist.salab.byron1st.jriext.instrumentation;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -86,31 +88,39 @@ public class InstApp {
         try{
             for (Object o1 : monitoringUnitsJsonList) {
                 JSONObject monitoringUnitObj = (JSONObject) o1;
-                MonitoringUnit monitoringUnit = buildMonitoringUnit(monitoringUnitObj);
+                ImmutablePair<MonitoringUnit, MonitoringUnit> builtMonitoringUnits = buildMonitoringUnit(monitoringUnitObj);
+                MonitoringUnit monitoringUnitLeft = builtMonitoringUnits.getLeft();
+                MonitoringUnit monitoringUnitRight = builtMonitoringUnits.getRight();
                 JSONArray monitoringValuesList = (JSONArray) monitoringUnitObj.get("values");
                 for (Object o2 : monitoringValuesList) {
                     JSONObject monitoringValuesObj = (JSONObject) o2;
                     MonitoringValue monitoringValue = buildMonitoringValue(monitoringValuesObj);
-                    monitoringUnit.addMonitoringValue(monitoringValue);
+                    monitoringUnitLeft.addMonitoringValue(monitoringValue);
+                    if(monitoringUnitRight != null) monitoringUnitRight.addMonitoringValue(monitoringValue);
                 }
-                monitoringUnitsList.add(monitoringUnit);
+                monitoringUnitsList.add(monitoringUnitLeft);
+                if(monitoringUnitRight != null) monitoringUnitsList.add(monitoringUnitRight);
             }
         } catch (ClassCastException e) { throw new ParseMonitoringUnitsException("Cannot parse the content. Check the syntax."); }
         return monitoringUnitsList;
     }
 
-    private static MonitoringUnit buildMonitoringUnit(JSONObject monitoringUnitObj) throws ParseMonitoringUnitsException, ClassCastException {
+    private static ImmutablePair<MonitoringUnit, MonitoringUnit> buildMonitoringUnit(JSONObject monitoringUnitObj) throws ParseMonitoringUnitsException, ClassCastException {
         String className = (String) monitoringUnitObj.get("class");
         JSONObject methodDefinition = (JSONObject) monitoringUnitObj.get("method");
         String location = (String) monitoringUnitObj.get("location");
-        MonitoringUnit monitoringUnit = new MonitoringUnit(className, (String) methodDefinition.get("desc"), (boolean) methodDefinition.get("isVirtual"));
+        MonitoringUnit monitoringUnitLeft = new MonitoringUnit(className, (String) methodDefinition.get("desc"), (boolean) methodDefinition.get("isVirtual"));
+        MonitoringUnit monitoringUnitRight = null;
         switch(location) {
-            case LOC_ENTER: monitoringUnit.setEnter(true); break;
-            case LOC_EXIT: monitoringUnit.setEnter(false); break;
-            case LOC_BOTH: break;
+            case LOC_ENTER: monitoringUnitLeft.setEnter(true); break;
+            case LOC_EXIT: monitoringUnitLeft.setEnter(false); break;
+            case LOC_BOTH:
+                monitoringUnitLeft.setEnter(true);
+                monitoringUnitRight = monitoringUnitLeft.duplicateThisWithOppositeLocation();
+                break;
             default: throw new ParseMonitoringUnitsException("Cannot parse the content. Check its syntax.");
         }
-        return monitoringUnit;
+        return new ImmutablePair<>(monitoringUnitLeft, monitoringUnitRight);
     }
 
     private static MonitoringValue buildMonitoringValue(JSONObject monitoringValuesObj) throws ParseMonitoringUnitsException {

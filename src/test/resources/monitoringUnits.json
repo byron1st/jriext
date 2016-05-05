@@ -43,5 +43,14 @@
         ]
       }
     ]
+  },
+  {
+    "class":"java/net/Socket",
+    "method":{
+      "isVirtual":true,
+      "desc":"getOutputStream()Ljava/io/OutputStream;"
+    },
+    "location":"B",
+    "values":[]
   }
 ]
