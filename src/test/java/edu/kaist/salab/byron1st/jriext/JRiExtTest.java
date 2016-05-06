@@ -10,7 +10,7 @@ import java.nio.file.Paths;
 /**
  * Created by byron1st on 2016. 5. 5..
  */
-public class JRiExtRevAppTest {
+public class JRiExtTest {
     private static Path configFile;
 
     @BeforeClass
@@ -23,14 +23,14 @@ public class JRiExtRevAppTest {
     public void testValidateConfig() throws Exception {
         String[] correctArgs = {configFile.toString()};
 
-        JRiExtRevApp.testValidateConfig(correctArgs);
+        JRiExt.testValidateConfig(correctArgs);
     }
 
     @Test
     public void testExtractClasspathList() throws Exception {
         String[] correctArgs = {configFile.toString()};
 
-        JRiExtRevApp.testExtractClasspathList(correctArgs);
+        JRiExt.testExtractClasspathList(correctArgs);
     }
 
 }
