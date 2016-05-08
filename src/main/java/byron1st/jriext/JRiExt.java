@@ -2,6 +2,8 @@ package byron1st.jriext;
 
 import byron1st.jriext.instrumentation.InstApp;
 import byron1st.jriext.instrumentation.MonitoringUnit;
+import byron1st.jriext.run.ProcessDeathDetector;
+import byron1st.jriext.run.ProcessListener;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -11,6 +13,7 @@ import org.json.simple.parser.ParseException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,13 +24,14 @@ import java.util.HashMap;
  * Created by byron1st on 2016. 5. 4..
  */
 public class JRiExt {
+    //TODO singleton으로 바꿔야 안전함.
     public static class ConfigFileException extends Exception {
         ConfigFileException(String message) {
             super(message);
         }
     }
     public static class ProcessRunException extends Exception {
-        ProcessRunException(String message) {
+        public ProcessRunException(String message) {
             super(message);
         }
     }
@@ -62,6 +66,7 @@ public class JRiExt {
     private ArrayList<MonitoringUnit> monitoringUnits;
     private HashMap<String, Process> processes = new HashMap<>();
     private Observer status;
+    private int count = 0;
 
     public void attachObserver(Observer observer) {
         this.status = observer;
@@ -92,13 +97,28 @@ public class JRiExt {
      * @throws ProcessRunException
      */
     public void runMainClass(String mainClassName) throws ProcessRunException {
-        String extension = ".murecords";
-        String recordsFileName = mainClassName + System.currentTimeMillis();
-        String recordsErrorFileName = recordsFileName +  ".error";
-        File monitoringRecordsFile = Paths.get(InstApp.defaultDirName, "records", recordsFileName + extension).toFile();
-        File monitoringErrorRecordsFile = Paths.get(InstApp.defaultDirName, "records", recordsErrorFileName + extension).toFile();
+        if (!Files.exists(InstApp.CACHE_ROOT)) throw new ProcessRunException("Instrumentation should be done prior to the execution of the target system.");
+        if (!Files.exists(InstApp.CACHE_ROOT.resolve(mainClassName + ".class"))) throw new ProcessRunException("The main class does not exist.");
 
-        String xbootclasspathCmd = InstApp.defaultDirName;
+        String processId = mainClassName + count;
+        String extension = ".murecords";
+        String recordsFileName = mainClassName.replaceAll("/", "_") + count + "-" + System.currentTimeMillis();
+        String recordsErrorFileName = recordsFileName +  ".error";
+        Path recordsDirectory = Paths.get(InstApp.defaultDirName, "records");
+        Path monitoringRecordsFile = Paths.get(InstApp.defaultDirName, "records", recordsFileName + extension);
+        Path monitoringErrorRecordsFile = Paths.get(InstApp.defaultDirName, "records", recordsErrorFileName + extension);
+        try {
+            if(!Files.exists(recordsDirectory)) Files.createDirectory(recordsDirectory);
+            Files.createFile(monitoringRecordsFile);
+            Files.createFile(monitoringErrorRecordsFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new ProcessRunException("Files for recording cannot be created in the cache folder.");
+        }
+
+
+        String xbootclasspathCmd = InstApp.CACHE_ROOT.toString();
+//        String xbootclasspathCmd = InstApp.defaultDirName;
 //        Iterator<String> iterator = jarFiles.iterator();
 //        while(iterator.hasNext()) {
 //            xbootclasspathCmd += ":" + iterator.next();
@@ -107,20 +127,32 @@ public class JRiExt {
         ProcessBuilder builder = new ProcessBuilder("java",
                 "-Xbootclasspath/p:" + xbootclasspathCmd,
                 mainClassName.replaceAll("/", "."));
-        builder.directory(new File(InstApp.defaultDirName));
-//        builder.redirectErrorStream(true);
-        builder.redirectOutput(monitoringRecordsFile);
-        builder.redirectError(monitoringErrorRecordsFile);
+        builder.directory(InstApp.CACHE_ROOT.toFile());
+        builder.redirectOutput(monitoringRecordsFile.toFile());
+        builder.redirectError(monitoringErrorRecordsFile.toFile());
         Process process;
         try {
             process = builder.start();
-        } catch (IOException e) { throw new ProcessRunException("A process cannot be run: " + mainClassName); }
-        processes.put(mainClassName, process);
+            count++;
+        } catch (IOException e) {
+            throw new ProcessRunException("A process cannot be run: " + mainClassName);
+        }
+        processes.put(processId, process);
+        ProcessDeathDetector deathDetector = new ProcessDeathDetector(process);
+        deathDetector.addListener(() -> processes.remove(processId));
+        deathDetector.start();
     }
 
-    public void stopMainClass(String mainClassName) {
+    public void stopMainClass(String mainClassName) throws ProcessRunException {
         Process process = processes.get(mainClassName);
         if (process != null) process.destroy();
+        else throw new ProcessRunException("There is no such process.");
+    }
+
+    public ArrayList<String> getListofRunningProcess() {
+        ArrayList<String> returnedList = new ArrayList<>();
+        processes.keySet().forEach(returnedList::add);
+        return returnedList;
     }
 
     private void updateStatus(String message) {

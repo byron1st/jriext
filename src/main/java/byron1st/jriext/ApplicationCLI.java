@@ -3,6 +3,7 @@ package byron1st.jriext;
 import byron1st.jriext.instrumentation.InstApp;
 import org.apache.commons.cli.*;
 
+import java.util.Objects;
 import java.util.Scanner;
 
 /**
@@ -29,6 +30,10 @@ public class ApplicationCLI {
         CommandLineParser parser = new DefaultParser();
         JRiExt jRiExt = new JRiExt();
         jRiExt.attachObserver(new StatusObserver());
+
+        System.out.println("The cache folder has been cleaned.");
+        System.out.println("The cache folder will be \"" + InstApp.defaultDirName + "\"");
+
         while(true) {
             Scanner in = new Scanner(System.in);
             System.out.print("jriext> ");
@@ -51,16 +56,17 @@ public class ApplicationCLI {
                 } else if (line.hasOption("inst")) {
                     jRiExt.instrument();
                 } else if (line.hasOption("r")) {
-                    System.out.println(line.getOptionValue("r"));
+                    jRiExt.runMainClass(line.getOptionValue("r"));
                 } else if (line.hasOption("d")) {
-                    System.out.println(line.getOptionValue("d"));
+                    jRiExt.stopMainClass(line.getOptionValue("d"));
                 } else if (line.hasOption("show")) {
-                    System.out.println("show");
+                    jRiExt.getListofRunningProcess().forEach(System.out::println);
                 } else if (line.hasOption("h")) {
                     HelpFormatter formatter = new HelpFormatter();
                     formatter.printHelp("Use one command at a time.", options);
                 } else if (line.hasOption("q")) {
                     System.exit(0);
+                } else if (Objects.equals(line.getArgs()[0], "")) {
                 } else {
                     System.out.println("Cannot understand your command.");
                 }

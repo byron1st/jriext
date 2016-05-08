@@ -31,9 +31,9 @@ public class InstApp {
         InstrumentationException(String message) { super(message); }
     }
 
-    public static final String defaultDirName = System.getProperty("user.dir") + File.separator + "cache";
+    public static final String defaultDirName = System.getProperty("user.dir") + File.separator + "jriext_userdata";
+    public static final Path CACHE_ROOT = Paths.get(defaultDirName + File.separator + "cache");
 
-    private static final Path CACHE_ROOT = Paths.get(defaultDirName);
     private static final String VKIND_FIELD = "F";
     private static final String VKIND_RETURN = "R";
     private static final String VKIND_PARAMETER = "P";
@@ -229,8 +229,9 @@ public class InstApp {
     }
 
     private void printClass(String className, ClassWriter classWriter) throws IOException {
+        //TODO: dir 경로 도출하는거, Windows에서는 안될 가능성있음.. path.resolve(className+'.class'); 뭐이런거 생각해보기,
         String fileName;
-        String dirName = defaultDirName;
+        String dirName = CACHE_ROOT.toString();
         int del = className.lastIndexOf('/');
         if(del != -1) {
             fileName = className.substring(className.lastIndexOf('/') + 1);
