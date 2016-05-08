@@ -1,4 +1,4 @@
-package edu.kaist.salab.byron1st.jriext;
+package byron1st.jriext;
 
 /**
  * Created by byron1st on 2016. 5. 6..

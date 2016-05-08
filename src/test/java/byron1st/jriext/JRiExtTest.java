@@ -1,4 +1,4 @@
-package edu.kaist.salab.byron1st.jriext;
+package byron1st.jriext;
 
 import org.junit.BeforeClass;
 import org.junit.Test;

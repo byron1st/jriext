@@ -1,7 +1,7 @@
-package edu.kaist.salab.byron1st.jriext;
+package byron1st.jriext;
 
-import edu.kaist.salab.byron1st.jriext.instrumentation.InstApp;
-import edu.kaist.salab.byron1st.jriext.instrumentation.MonitoringUnit;
+import byron1st.jriext.instrumentation.InstApp;
+import byron1st.jriext.instrumentation.MonitoringUnit;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;

@@ -1,4 +1,4 @@
-package edu.kaist.salab.byron1st.jriext.instrumentation;
+package byron1st.jriext.instrumentation;
 
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;

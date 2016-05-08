@@ -1,14 +1,11 @@
-package edu.kaist.salab.byron1st.jriext.instrumentation;
+package byron1st.jriext.instrumentation;
 
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by byron1st on 2016. 5. 5..

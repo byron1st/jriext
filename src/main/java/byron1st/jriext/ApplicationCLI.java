@@ -1,6 +1,6 @@
-package edu.kaist.salab.byron1st.jriext;
+package byron1st.jriext;
 
-import edu.kaist.salab.byron1st.jriext.instrumentation.InstApp;
+import byron1st.jriext.instrumentation.InstApp;
 import org.apache.commons.cli.*;
 
 import java.util.Scanner;
@@ -11,7 +11,6 @@ import java.util.Scanner;
 public class ApplicationCLI {
     private static void handleException(Exception e) {
         System.out.println(e.getMessage());
-//        e.printStackTrace();
     }
 
     private static final Options options = new Options();

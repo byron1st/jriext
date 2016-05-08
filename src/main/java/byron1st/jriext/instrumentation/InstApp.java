@@ -1,7 +1,6 @@
-package edu.kaist.salab.byron1st.jriext.instrumentation;
+package byron1st.jriext.instrumentation;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
