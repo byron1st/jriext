@@ -24,7 +24,7 @@ public class ApplicationCLI {
         options.addOption("q", "quit", false, "Quit JRiExtractor.");
         options.addOption("h", "help", false, "Print the instruction.");
         options.addOption("runAll", false, "Run all main classes documented in the config file.");
-        //TODO: Reset menu 추가: -c 부를 때, 리셋을 하고 부르기.
+        options.addOption("reset", false, "Reset all details of the configuration.");
     }
 
     private static void printLaunchingMessage() {
@@ -76,6 +76,8 @@ public class ApplicationCLI {
                 } else if (line.hasOption("h")) {
                     HelpFormatter formatter = new HelpFormatter();
                     formatter.printHelp("Use one command at a time.", options);
+                } else if (line.hasOption("reset")) {
+                    jRiExt.reset();
                 } else if (line.hasOption("q")) {
                     System.exit(0);
                 } else if (Objects.equals(line.getArgs()[0], "")) {

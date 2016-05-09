@@ -104,6 +104,20 @@ public class JRiExt {
 
     private int count = 0;
 
+    public void reset() throws ProcessRunException {
+        for (String id : processes.keySet()) {
+            stopMainClass(id);
+        }
+        InstApp.deleteCacheFolderIfExists();
+
+        classpath = null;
+        monitoringUnits = null;
+        libraries = null;
+        mainClassNames = null;
+        processes = new HashMap<>();
+        updateStatus("All running processes are stopped and all details of the confiugration are initialized.");
+    }
+
     public void attachObserver(Observer observer) {
         this.status = observer;
     }
@@ -117,6 +131,8 @@ public class JRiExt {
     }
 
     public void loadConfigFile(String configFilePath) throws ProcessRunException, InstApp.ParseMonitoringUnitsException, ConfigFileException {
+        reset();
+
         HashMap<String, Object> parsedValues = validateConfig(configFilePath);
         try {
             Path monitoringUnitsFilePath = Paths.get((String) parsedValues.get(MONITORING_UNITS));

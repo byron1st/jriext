@@ -42,7 +42,7 @@ public class InstApp {
     private static final String LOC_EXIT= "X";
     private static final String LOC_BOTH= "B";
 
-    private static void deleteCacheFolderIfExists() {
+    public static void deleteCacheFolderIfExists() {
         if(Files.exists(CACHE_ROOT)) {
             try {
                 Files.walkFileTree(CACHE_ROOT, new FileVisitor<Path>() {
