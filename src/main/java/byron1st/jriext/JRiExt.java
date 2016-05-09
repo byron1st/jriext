@@ -41,22 +41,33 @@ public class JRiExt {
 
     private static final int CONFIG_SIZE = 3;
 
-    private static ImmutablePair<JSONArray, String> validateConfig(String configFilePath) throws ProcessRunException {
+    private static final String CLASSPATHS = "classpaths";
+    private static final String MONITORING_UNITS = "monitoringUnits";
+    private static final String LIBRARIES = "libraries";
+
+    private static HashMap<String, Object> validateConfig(String configFilePath) throws ConfigFileException {
         Path config = Paths.get(configFilePath);
-        if (!Files.exists(config)) throw new ProcessRunException("A config file does not exists.");
+        if (!Files.exists(config)) throw new ConfigFileException("A config file does not exists.");
         JSONArray classpaths;
         String monitoringUnitsFile;
+        JSONArray libraries;
         try (BufferedReader br = Files.newBufferedReader(config)){
             JSONObject configObj = (JSONObject) (new JSONParser()).parse(br);
-            if (configObj.size() != CONFIG_SIZE) throw new ProcessRunException("The content of the config file is wrong.");
+            if (configObj.size() != CONFIG_SIZE) throw new ConfigFileException("The content of the config file is wrong.");
             try {
-                classpaths = (JSONArray) configObj.get("classpaths"); // If it is not an array, 'java.lang.ClassCastException' is thrown.
-                monitoringUnitsFile = (String) configObj.get("monitoringUnits"); // If it is not a string, 'java.lang.ClassCastException' is thrown.
-            } catch(ClassCastException e) { throw new ProcessRunException("The content of the config file is wrong."); }
-            if (classpaths == null || monitoringUnitsFile == null) throw new ProcessRunException("The content of the config file is wrong.");
-        } catch (IOException | ParseException e) { throw new ProcessRunException("The config file cannot be read."); }
-        return new ImmutablePair<>(classpaths, monitoringUnitsFile);
+                classpaths = (JSONArray) configObj.get(CLASSPATHS); // If it is not an array, 'java.lang.ClassCastException' is thrown.
+                monitoringUnitsFile = (String) configObj.get(MONITORING_UNITS); // If it is not a string, 'java.lang.ClassCastException' is thrown.
+                libraries = (JSONArray) configObj.get(LIBRARIES); // If it is not an array, 'java.lang.ClassCastException' is thrown.
+            } catch(ClassCastException e) { throw new ConfigFileException("The content of the config file is wrong."); }
+            if (classpaths == null || monitoringUnitsFile == null || libraries == null) throw new ConfigFileException("The content of the config file is wrong.");
+        } catch (IOException | ParseException e) { throw new ConfigFileException("The config file cannot be read."); }
+        HashMap<String, Object> returnedMap = new HashMap<>();
+        returnedMap.put(CLASSPATHS, classpaths);
+        returnedMap.put(MONITORING_UNITS, monitoringUnitsFile);
+        returnedMap.put(LIBRARIES, libraries);
+        return returnedMap;
     }
+
     private static ArrayList<Path> extractClasspathList(JSONArray jsonArray) throws ProcessRunException {
         ArrayList<Path> list = new ArrayList<>();
         for (Object obj : jsonArray) {
@@ -67,25 +78,38 @@ public class JRiExt {
         return list;
     }
 
+    private static ArrayList<String> extractLibrariesList(HashMap<String, Object> parsedValues) throws ClassCastException {
+        ArrayList<String> librariesList = new ArrayList<>();
+        ((JSONArray) parsedValues.get(LIBRARIES)).forEach((library) -> librariesList.add((String) library));
+        return librariesList;
+    }
+
     private ArrayList<Path> classpathList;
     private ArrayList<MonitoringUnit> monitoringUnits;
+    private ArrayList<String> libraries;
     private HashMap<String, Process> processes = new HashMap<>();
     private Observer status;
+
     private int count = 0;
 
     public void attachObserver(Observer observer) {
         this.status = observer;
     }
 
-    public void loadConfigFile(String configFilePath) throws ProcessRunException, InstApp.ParseMonitoringUnitsException {
-        ImmutablePair<JSONArray, String> parsedValues = validateConfig(configFilePath);
-        Path monitoringUnitsFilePath = Paths.get(parsedValues.getRight());
-        if (!Files.exists(monitoringUnitsFilePath) || !Files.isRegularFile(monitoringUnitsFilePath)) throw new ProcessRunException("A monitoring units file is wrong.");
+    public void loadConfigFile(String configFilePath) throws ProcessRunException, InstApp.ParseMonitoringUnitsException, ConfigFileException {
+        HashMap<String, Object> parsedValues = validateConfig(configFilePath);
+        try {
+            Path monitoringUnitsFilePath = Paths.get((String) parsedValues.get(MONITORING_UNITS));
+            if (!Files.exists(monitoringUnitsFilePath) || !Files.isRegularFile(monitoringUnitsFilePath)) throw new ProcessRunException("A monitoring units file is wrong.");
 
-        classpathList = extractClasspathList(parsedValues.getLeft());
-        updateStatus("Classpaths are extracted.");
-        monitoringUnits = InstApp.parse(monitoringUnitsFilePath);
-        updateStatus("Monitoring units are extracted.");
+            classpathList = extractClasspathList((JSONArray) parsedValues.get(CLASSPATHS));
+            updateStatus("Classpaths are extracted.");
+            monitoringUnits = InstApp.parse(monitoringUnitsFilePath);
+            updateStatus("Monitoring units are extracted.");
+            libraries = extractLibrariesList(parsedValues);
+            if (libraries.size() == 0) updateStatus("There is no external libarary.");
+            else updateStatus("External libraries are extracted.");
+        } catch (ClassCastException e) { throw new ConfigFileException("The content of the config file is wrong."); }
     }
 
     public void instrument() throws InstApp.InstrumentationException, ConfigFileException {
@@ -123,11 +147,9 @@ public class JRiExt {
 
 
         String xbootclasspathCmd = InstApp.CACHE_ROOT.toString();
-//        String xbootclasspathCmd = InstApp.defaultDirName;
-//        Iterator<String> iterator = jarFiles.iterator();
-//        while(iterator.hasNext()) {
-//            xbootclasspathCmd += ":" + iterator.next();
-//        }
+        for (String library : libraries) {
+            xbootclasspathCmd += ":" + library;
+        }
 
         ProcessBuilder builder = new ProcessBuilder("java",
                 "-Xbootclasspath/p:" + xbootclasspathCmd,
@@ -139,6 +161,7 @@ public class JRiExt {
         try {
             process = builder.start();
             count++;
+            updateStatus(processId + " is running.");
         } catch (IOException e) {
             throw new ProcessRunException("A process cannot be run: " + mainClassName);
         }
@@ -165,12 +188,12 @@ public class JRiExt {
     }
 
     //Test method
-    static ImmutablePair<JSONArray, String> testValidateConfig(String[] args) throws ProcessRunException {
+    static HashMap<String, Object> testValidateConfig(String[] args) throws ProcessRunException, ConfigFileException {
         return validateConfig(args[0]);
     }
 
     //Test method
-    static ArrayList<Path> testExtractClasspathList(String[] args) throws ProcessRunException {
-        return extractClasspathList(validateConfig(args[0]).getLeft());
+    static ArrayList<Path> testExtractClasspathList(String[] args) throws ProcessRunException, ConfigFileException {
+        return extractClasspathList((JSONArray) validateConfig(args[0]).get(CLASSPATHS));
     }
 }
