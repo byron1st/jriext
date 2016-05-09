@@ -3,17 +3,13 @@ package byron1st.jriext;
 import byron1st.jriext.instrumentation.InstApp;
 import byron1st.jriext.instrumentation.MonitoringUnit;
 import byron1st.jriext.run.ProcessDeathDetector;
-import byron1st.jriext.run.ProcessListener;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,41 +37,38 @@ public class JRiExt {
 
     private static final int CONFIG_SIZE = 3;
 
-    private static final String CLASSPATHS = "classpaths";
+    private static final String CLASSPATH = "classpath";
     private static final String MONITORING_UNITS = "monitoringUnits";
     private static final String LIBRARIES = "libraries";
 
     private static HashMap<String, Object> validateConfig(String configFilePath) throws ConfigFileException {
         Path config = Paths.get(configFilePath);
         if (!Files.exists(config)) throw new ConfigFileException("A config file does not exists.");
-        JSONArray classpaths;
+        String classpath;
         String monitoringUnitsFile;
         JSONArray libraries;
         try (BufferedReader br = Files.newBufferedReader(config)){
             JSONObject configObj = (JSONObject) (new JSONParser()).parse(br);
             if (configObj.size() != CONFIG_SIZE) throw new ConfigFileException("The content of the config file is wrong.");
             try {
-                classpaths = (JSONArray) configObj.get(CLASSPATHS); // If it is not an array, 'java.lang.ClassCastException' is thrown.
+                classpath = (String) configObj.get(CLASSPATH); // If it is not an array, 'java.lang.ClassCastException' is thrown.
                 monitoringUnitsFile = (String) configObj.get(MONITORING_UNITS); // If it is not a string, 'java.lang.ClassCastException' is thrown.
                 libraries = (JSONArray) configObj.get(LIBRARIES); // If it is not an array, 'java.lang.ClassCastException' is thrown.
             } catch(ClassCastException e) { throw new ConfigFileException("The content of the config file is wrong."); }
-            if (classpaths == null || monitoringUnitsFile == null || libraries == null) throw new ConfigFileException("The content of the config file is wrong.");
+            if (classpath == null || monitoringUnitsFile == null || libraries == null) throw new ConfigFileException("The content of the config file is wrong.");
         } catch (IOException | ParseException e) { throw new ConfigFileException("The config file cannot be read."); }
         HashMap<String, Object> returnedMap = new HashMap<>();
-        returnedMap.put(CLASSPATHS, classpaths);
+        returnedMap.put(CLASSPATH, classpath);
         returnedMap.put(MONITORING_UNITS, monitoringUnitsFile);
         returnedMap.put(LIBRARIES, libraries);
         return returnedMap;
     }
 
-    private static ArrayList<Path> extractClasspathList(JSONArray jsonArray) throws ProcessRunException {
-        ArrayList<Path> list = new ArrayList<>();
-        for (Object obj : jsonArray) {
-            Path classpath = Paths.get((String) obj);
-            if (!Files.exists(classpath) || !Files.isDirectory(classpath)) throw new ProcessRunException("A classpath does not exists.");
-            list.add(classpath);
-        }
-        return list;
+    private static Path extractClasspathList(String classpathString) throws ProcessRunException {
+        Path classpath;
+        classpath = Paths.get(classpathString);
+        if (!Files.exists(classpath) || !Files.isDirectory(classpath)) throw new ProcessRunException("A classpath does not exists.");
+        return classpath;
     }
 
     private static ArrayList<String> extractLibrariesList(HashMap<String, Object> parsedValues) throws ClassCastException {
@@ -84,7 +77,7 @@ public class JRiExt {
         return librariesList;
     }
 
-    private ArrayList<Path> classpathList;
+    private Path classpath;
     private ArrayList<MonitoringUnit> monitoringUnits;
     private ArrayList<String> libraries;
     private HashMap<String, Process> processes = new HashMap<>();
@@ -102,7 +95,7 @@ public class JRiExt {
             Path monitoringUnitsFilePath = Paths.get((String) parsedValues.get(MONITORING_UNITS));
             if (!Files.exists(monitoringUnitsFilePath) || !Files.isRegularFile(monitoringUnitsFilePath)) throw new ProcessRunException("A monitoring units file is wrong.");
 
-            classpathList = extractClasspathList((JSONArray) parsedValues.get(CLASSPATHS));
+            classpath = extractClasspathList((String) parsedValues.get(CLASSPATH));
             updateStatus("Classpaths are extracted.");
             monitoringUnits = InstApp.parse(monitoringUnitsFilePath);
             updateStatus("Monitoring units are extracted.");
@@ -113,11 +106,9 @@ public class JRiExt {
     }
 
     public void instrument() throws InstApp.InstrumentationException, ConfigFileException {
-        if (classpathList == null) throw new ConfigFileException("A list of classpaths was not extracted.");
-        for (Path classpath : classpathList) {
-            InstApp.getInstance().instrument(classpath, monitoringUnits, false);
-            updateStatus(classpath.toString() + " has been instrumented.");
-        }
+        if (classpath == null) throw new ConfigFileException("A list of classpaths was not extracted.");
+        InstApp.getInstance().instrument(classpath, monitoringUnits, false);
+        updateStatus(classpath.toString() + " has been instrumented.");
     }
 
     /**
@@ -193,7 +184,7 @@ public class JRiExt {
     }
 
     //Test method
-    static ArrayList<Path> testExtractClasspathList(String[] args) throws ProcessRunException, ConfigFileException {
-        return extractClasspathList((JSONArray) validateConfig(args[0]).get(CLASSPATHS));
+    static Path testExtractClasspathList(String[] args) throws ProcessRunException, ConfigFileException {
+        return extractClasspathList((String) validateConfig(args[0]).get(CLASSPATH));
     }
 }

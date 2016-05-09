@@ -30,7 +30,7 @@ public class ApplicationCLI {
         System.out.println(
                 "/***************************************************JRiExt*********************************************************/\n" +
                 "/* The running folder will be \"" + InstApp.defaultDirName + "\".\n" +
-                "/* If you have additional external libraries, which are necessary to run the program, but will not be instrumented,\n" +
+                "/* If you have additional resources(i.e. images), which are necessary to run the program,\n" +
                 "/* please copy them to appropriate location considering the running folder.\n" +
                 "/******************************************************************************************************************/");
     }

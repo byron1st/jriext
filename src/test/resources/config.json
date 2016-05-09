@@ -1,7 +1,5 @@
 {
-  "classpaths":[
-    "/Users/byron1st/Documents/Workspace/IntelliJProjects/jriext/src/test/resources/bin"
-  ],
+  "classpath":"/Users/byron1st/Documents/Workspace/IntelliJProjects/jriext/src/test/resources/bin",
   "monitoringUnits":"/Users/byron1st/Documents/Workspace/IntelliJProjects/jriext/src/test/resources/monitoringUnits.json",
   "libraries":[]
 }
