@@ -22,6 +22,7 @@ import java.util.HashSet;
  */
 public class InstApp {
     private static InstApp instApp = new InstApp();
+    private InstApp() {}
     public static InstApp getInstance() { return instApp; }
 
     public static final class ParseMonitoringUnitsException extends Exception {

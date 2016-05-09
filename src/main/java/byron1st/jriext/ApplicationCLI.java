@@ -28,7 +28,7 @@ public class ApplicationCLI {
     public static void main(String[] args) {
         initializeCMD();
         CommandLineParser parser = new DefaultParser();
-        JRiExt jRiExt = new JRiExt();
+        JRiExt jRiExt = JRiExt.getInstance();
         jRiExt.attachObserver(new StatusObserver());
 
         System.out.println("The cache folder has been cleaned.");

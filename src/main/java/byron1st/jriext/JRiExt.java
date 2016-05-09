@@ -24,7 +24,10 @@ import java.util.HashMap;
  * Created by byron1st on 2016. 5. 4..
  */
 public class JRiExt {
-    //TODO singleton으로 바꿔야 안전함.
+    private static JRiExt jRiExtApp = new JRiExt();
+    private JRiExt() {}
+    public static JRiExt getInstance() { return jRiExtApp; }
+
     public static class ConfigFileException extends Exception {
         ConfigFileException(String message) {
             super(message);
