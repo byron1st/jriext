@@ -23,6 +23,7 @@ public class ApplicationCLI {
         options.addOption("show", false, "Show running processes.");
         options.addOption("q", "quit", false, "Quit JRiExtractor.");
         options.addOption("h", "help", false, "Print the instruction.");
+        options.addOption("runAll", false, "Run all main classes documented in the config file.");
         //TODO: Reset menu 추가: -c 부를 때, 리셋을 하고 부르기.
     }
 
@@ -66,6 +67,8 @@ public class ApplicationCLI {
                     jRiExt.instrument();
                 } else if (line.hasOption("r")) {
                     jRiExt.runMainClass(line.getOptionValue("r"));
+                } else if (line.hasOption("runAll")) {
+                    jRiExt.runAllMainClass();
                 } else if (line.hasOption("d")) {
                     jRiExt.stopMainClass(line.getOptionValue("d"));
                 } else if (line.hasOption("show")) {

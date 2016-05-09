@@ -35,11 +35,14 @@ public class JRiExt {
         }
     }
 
-    private static final int CONFIG_SIZE = 3;
+    private static final int CONFIG_SIZE = 4;
 
     private static final String CLASSPATH = "classpath";
     private static final String MONITORING_UNITS = "monitoringUnits";
     private static final String LIBRARIES = "libraries";
+    private static final String RUN = "run";
+    private static final String RUN_SHORTCUT = "shortcut";
+    private static final String RUN_MAINCLASSNAME = "mainClassName";
 
     private static HashMap<String, Object> validateConfig(String configFilePath) throws ConfigFileException {
         Path config = Paths.get(configFilePath);
@@ -47,6 +50,7 @@ public class JRiExt {
         String classpath;
         String monitoringUnitsFile;
         JSONArray libraries;
+        JSONArray run;
         try (BufferedReader br = Files.newBufferedReader(config)){
             JSONObject configObj = (JSONObject) (new JSONParser()).parse(br);
             if (configObj.size() != CONFIG_SIZE) throw new ConfigFileException("The content of the config file is wrong.");
@@ -54,6 +58,7 @@ public class JRiExt {
                 classpath = (String) configObj.get(CLASSPATH); // If it is not an array, 'java.lang.ClassCastException' is thrown.
                 monitoringUnitsFile = (String) configObj.get(MONITORING_UNITS); // If it is not a string, 'java.lang.ClassCastException' is thrown.
                 libraries = (JSONArray) configObj.get(LIBRARIES); // If it is not an array, 'java.lang.ClassCastException' is thrown.
+                run = (JSONArray) configObj.get(RUN);
             } catch(ClassCastException e) { throw new ConfigFileException("The content of the config file is wrong."); }
             if (classpath == null || monitoringUnitsFile == null || libraries == null) throw new ConfigFileException("The content of the config file is wrong.");
         } catch (IOException | ParseException e) { throw new ConfigFileException("The config file cannot be read."); }
@@ -61,6 +66,7 @@ public class JRiExt {
         returnedMap.put(CLASSPATH, classpath);
         returnedMap.put(MONITORING_UNITS, monitoringUnitsFile);
         returnedMap.put(LIBRARIES, libraries);
+        returnedMap.put(RUN, run);
         return returnedMap;
     }
 
@@ -71,22 +77,43 @@ public class JRiExt {
         return classpath;
     }
 
-    private static ArrayList<String> extractLibrariesList(HashMap<String, Object> parsedValues) throws ClassCastException {
+    private static ArrayList<String> extractLibrariesList(JSONArray parsedList) throws ClassCastException {
         ArrayList<String> librariesList = new ArrayList<>();
-        ((JSONArray) parsedValues.get(LIBRARIES)).forEach((library) -> librariesList.add((String) library));
+        parsedList.forEach((library) -> librariesList.add((String) library));
         return librariesList;
+    }
+
+    private HashMap<String, String> extractMainClassNames(JSONArray parsedList) throws ClassCastException {
+        HashMap<String, String> returnedMap = new HashMap<>();
+        for (Object o : parsedList) {
+            JSONObject runObj = (JSONObject) o;
+            String shortcut = (String) runObj.get(RUN_SHORTCUT);
+            String mainClassName = (String) runObj.get(RUN_MAINCLASSNAME);
+            returnedMap.put(shortcut, mainClassName);
+        }
+        return returnedMap;
     }
 
     private Path classpath;
     private ArrayList<MonitoringUnit> monitoringUnits;
     private ArrayList<String> libraries;
+    private HashMap<String, String> mainClassNames;
     private HashMap<String, Process> processes = new HashMap<>();
+
     private Observer status;
 
     private int count = 0;
 
     public void attachObserver(Observer observer) {
         this.status = observer;
+    }
+
+    public void runAllMainClass() throws ProcessRunException {
+        if (mainClassNames != null) {
+            for (String shortcut : mainClassNames.keySet()) {
+                runMainClass(shortcut);
+            }
+        } else throw new ProcessRunException("The config file is not loaded.");
     }
 
     public void loadConfigFile(String configFilePath) throws ProcessRunException, InstApp.ParseMonitoringUnitsException, ConfigFileException {
@@ -99,9 +126,11 @@ public class JRiExt {
             updateStatus("Classpaths are extracted.");
             monitoringUnits = InstApp.parse(monitoringUnitsFilePath);
             updateStatus("Monitoring units are extracted.");
-            libraries = extractLibrariesList(parsedValues);
+            libraries = extractLibrariesList((JSONArray) parsedValues.get(LIBRARIES));
             if (libraries.size() == 0) updateStatus("There is no external libarary.");
             else updateStatus("External libraries are extracted.");
+            mainClassNames = extractMainClassNames((JSONArray) parsedValues.get(RUN));
+            updateStatus(mainClassNames.size() + " main classes are extracted.");
         } catch (ClassCastException e) { throw new ConfigFileException("The content of the config file is wrong."); }
     }
 
@@ -113,10 +142,14 @@ public class JRiExt {
 
     /**
      *
-     * @param mainClassName Its delimiter should be ".", not "/".
+     * @param name Its delimiter should be ".", not "/".
      * @throws ProcessRunException
      */
-    public void runMainClass(String mainClassName) throws ProcessRunException {
+    public void runMainClass(String name) throws ProcessRunException {
+        String mainClassName;
+        if (mainClassNames.containsKey(name)) mainClassName = mainClassNames.get(name);
+        else mainClassName = name;
+
         if (!Files.exists(InstApp.CACHE_ROOT)) throw new ProcessRunException("Instrumentation should be done prior to the execution of the target system.");
         if (!Files.exists(InstApp.CACHE_ROOT.resolve(mainClassName + ".class"))) throw new ProcessRunException("The main class does not exist.");
 

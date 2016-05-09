@@ -3,5 +3,11 @@
   "monitoringUnits":"/Users/byron1st/Documents/Workspace/IntelliJProjects/jriext/src/test/resources/monitoringUnits2.json",
   "libraries":[
     "/Users/byron1st/Documents/Workspace/IntelliJProjects/jriext/src/test/resources/config2_resources/lib/jriext-digraph-1.0.jar"
+  ],
+  "run":[
+    {
+      "shortcut":"main1",
+      "mainClassName":"byron1st/Main"
+    }
   ]
 }

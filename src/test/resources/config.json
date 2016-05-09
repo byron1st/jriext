@@ -1,5 +1,15 @@
 {
   "classpath":"/Users/byron1st/Documents/Workspace/IntelliJProjects/jriext/src/test/resources/bin",
   "monitoringUnits":"/Users/byron1st/Documents/Workspace/IntelliJProjects/jriext/src/test/resources/monitoringUnits.json",
-  "libraries":[]
+  "libraries":[],
+  "run":[
+    {
+      "shortcut":"main1",
+      "mainClassName":"framework/PFSystemMain"
+    },
+    {
+      "shortcut":"main2",
+      "mainClassName":"framework/PFSystemMain"
+    }
+  ]
 }
