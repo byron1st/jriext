@@ -1,0 +1,11 @@
+[
+  {
+    "class":"byron1st/Main",
+    "method":{
+      "isVirtual":false,
+      "desc":"main([Ljava/lang/String;)V"
+    },
+    "location":"B",
+    "values":[]
+  }
+]

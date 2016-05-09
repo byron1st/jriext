@@ -23,6 +23,16 @@ public class ApplicationCLI {
         options.addOption("show", false, "Show running processes.");
         options.addOption("q", "quit", false, "Quit JRiExtractor.");
         options.addOption("h", "help", false, "Print the instruction.");
+        //TODO: Reset menu 추가: -c 부를 때, 리셋을 하고 부르기.
+    }
+
+    private static void printLaunchingMessage() {
+        System.out.println(
+                "/***************************************************JRiExt*********************************************************/\n" +
+                "/* The running folder will be \"" + InstApp.defaultDirName + "\".\n" +
+                "/* If you have additional external libraries, which are necessary to run the program, but will not be instrumented,\n" +
+                "/* please copy them to appropriate location considering the running folder.\n" +
+                "/******************************************************************************************************************/");
     }
 
     public static void main(String[] args) {
@@ -31,8 +41,7 @@ public class ApplicationCLI {
         JRiExt jRiExt = JRiExt.getInstance();
         jRiExt.attachObserver(new StatusObserver());
 
-        System.out.println("The cache folder has been cleaned.");
-        System.out.println("The cache folder will be \"" + InstApp.defaultDirName + "\"");
+        printLaunchingMessage();
 
         while(true) {
             Scanner in = new Scanner(System.in);

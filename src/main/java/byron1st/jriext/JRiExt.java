@@ -39,6 +39,8 @@ public class JRiExt {
         }
     }
 
+    private static final int CONFIG_SIZE = 3;
+
     private static ImmutablePair<JSONArray, String> validateConfig(String configFilePath) throws ProcessRunException {
         Path config = Paths.get(configFilePath);
         if (!Files.exists(config)) throw new ProcessRunException("A config file does not exists.");
@@ -46,7 +48,7 @@ public class JRiExt {
         String monitoringUnitsFile;
         try (BufferedReader br = Files.newBufferedReader(config)){
             JSONObject configObj = (JSONObject) (new JSONParser()).parse(br);
-            if (configObj.size() != 2) throw new ProcessRunException("The content of the config file is wrong.");
+            if (configObj.size() != CONFIG_SIZE) throw new ProcessRunException("The content of the config file is wrong.");
             try {
                 classpaths = (JSONArray) configObj.get("classpaths"); // If it is not an array, 'java.lang.ClassCastException' is thrown.
                 monitoringUnitsFile = (String) configObj.get("monitoringUnits"); // If it is not a string, 'java.lang.ClassCastException' is thrown.
