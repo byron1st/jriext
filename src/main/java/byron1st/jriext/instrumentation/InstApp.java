@@ -1,5 +1,6 @@
 package byron1st.jriext.instrumentation;
 
+import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -12,9 +13,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 
 /**
@@ -31,9 +34,18 @@ public class InstApp {
     public static final class InstrumentationException extends Exception {
         InstrumentationException(String message) { super(message); }
     }
+    public static final class ConvertLogsToJSONException extends Exception {
+        ConvertLogsToJSONException(String message) { super(message); }
+    }
 
     public static final String defaultDirName = System.getProperty("user.dir") + File.separator + "jriext_userdata";
     public static final Path CACHE_ROOT = Paths.get(defaultDirName + File.separator + "cache");
+
+    static final String ENTER = "+E+";
+    static final String EXIT = "+X+";
+    static final int BEGIN_INDEX_LENGTH = 3;
+    static final String DDELIM = ",";
+    static final String STATIC = "<static:";
 
     private static final String VKIND_FIELD = "F";
     private static final String VKIND_RETURN = "R";
@@ -103,6 +115,67 @@ public class InstApp {
             }
         } catch (ClassCastException e) { throw new ParseMonitoringUnitsException("Cannot parse the content. Check the syntax."); }
         return monitoringUnitsList;
+    }
+
+    public static ImmutablePair<JSONArray, ArrayList<ImmutablePair<String, String>>> convertLogs2JSON(Path logFile) throws ConvertLogsToJSONException {
+        //TODO: Test!
+        ArrayList<ImmutablePair<String, String>> crackedLogs = new ArrayList<>();
+        JSONArray jsonConverted = new JSONArray();
+        try(BufferedReader br = Files.newBufferedReader(logFile)) {
+            JSONObject lineObject = new JSONObject();
+            String line;
+            String lineBefore = null;
+            while((line = br.readLine()) != null) {
+                boolean isEnter;
+                if (line.startsWith(ENTER)) isEnter = true;
+                else if (line.startsWith(EXIT)) isEnter = false;
+                else {
+                    addCrackedLogs(crackedLogs, line, lineBefore);
+                    continue;
+                }
+
+                String[] elementsList = line.substring(BEGIN_INDEX_LENGTH).split(",");
+                if (elementsList.length < 6) {
+                    addCrackedLogs(crackedLogs, line, lineBefore);
+                    continue;
+                }
+
+                Integer objectId = null;
+                try {
+                    objectId = Integer.parseInt(elementsList[3]);
+                } catch (NumberFormatException e) {
+                    if(!elementsList[3].startsWith(STATIC)) throw new NumberFormatException();
+                }
+
+                JSONArray values = null;
+                if (elementsList.length > 6) {
+                    values = new JSONArray();
+                    values.addAll(Arrays.asList(elementsList).subList(6, elementsList.length));
+                }
+
+                lineObject.put("timestamp", Long.parseLong(elementsList[0]));
+                lineObject.put("threadName", elementsList[1]);
+                lineObject.put("threadId", Integer.parseInt(elementsList[2]));
+                if (objectId == null) lineObject.put("objectId", elementsList[3]);
+                else lineObject.put("objectId", objectId);
+                lineObject.put("className", elementsList[4]);
+                lineObject.put("methodDesc", elementsList[5]);
+                lineObject.put("isEnter", isEnter);
+                if (values != null) lineObject.put("values", values);
+                jsonConverted.add(lineObject);
+
+                lineBefore = line;
+            }
+        } catch (IOException | NumberFormatException e) {
+            throw new ConvertLogsToJSONException("Reading a log file has been failed: " + logFile.toString());
+        }
+
+        return new ImmutablePair<>(jsonConverted, crackedLogs);
+    }
+
+    private static void addCrackedLogs(ArrayList<ImmutablePair<String, String>> crackedLogs, String line, String lineBefore) {
+        if (lineBefore == null) crackedLogs.add(new ImmutablePair<>(null, line));
+        else crackedLogs.add(new ImmutablePair<>(lineBefore, line));
     }
 
     private static ImmutablePair<MonitoringUnit, MonitoringUnit> buildMonitoringUnit(JSONObject monitoringUnitObj) throws ParseMonitoringUnitsException, ClassCastException {

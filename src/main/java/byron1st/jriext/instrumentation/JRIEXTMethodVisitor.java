@@ -10,9 +10,9 @@ import org.objectweb.asm.commons.AdviceAdapter;
  * Created by byron1st on 2016. 1. 8..
  */
 class JRIEXTMethodVisitor extends AdviceAdapter implements Opcodes{
-    private static final String ENTER = "+E+";
-    private static final String EXIT = "+X+";
-    private static final String DDELIM = ",";
+//    private static final String ENTER = "+E+";
+//    private static final String EXIT = "+X+";
+//    private static final String DDELIM = ",";
 
     private static MonitoringValueMethod getThreadID = new MonitoringValueMethod(false, "java/lang/Thread", "currentThread()Ljava/lang/Thread;");
     private static MonitoringValueMethod getThreadName = new MonitoringValueMethod(false, "java/lang/Thread", "currentThread()Ljava/lang/Thread;");
@@ -46,8 +46,8 @@ class JRIEXTMethodVisitor extends AdviceAdapter implements Opcodes{
         mv.visitJumpInsn(IFNULL, ifSystemOutNull);
         logBeginPrint();
 
-        if(monitoringUnit.isEnter()) logStringValue(ENTER);
-        else logStringValue(EXIT);
+        if(monitoringUnit.isEnter()) logStringValue(InstApp.ENTER);
+        else logStringValue(InstApp.EXIT);
 
         log(getExecutionTime, true);
         logDelimiter();
@@ -57,7 +57,7 @@ class JRIEXTMethodVisitor extends AdviceAdapter implements Opcodes{
         logDelimiter();
         logObjectId();
         logDelimiter();
-        logStringValue(monitoringUnit.getClassName() + DDELIM + monitoringUnit.getMethodName() + monitoringUnit.getMethodDesc());
+        logStringValue(monitoringUnit.getClassName() + InstApp.DDELIM + monitoringUnit.getMethodName() + monitoringUnit.getMethodDesc());
         logEndPrint();
 
         for (MonitoringValue monitoringValue : monitoringUnit.getMonitoringValues()) {
@@ -97,7 +97,7 @@ class JRIEXTMethodVisitor extends AdviceAdapter implements Opcodes{
         mv.visitJumpInsn(GOTO, endLabel);
         mv.visitLabel(ifFieldNull);
         mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-        mv.visitLdcInsn(DDELIM + "null");
+        mv.visitLdcInsn(InstApp.DDELIM + "null");
         mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "print", "(Ljava/lang/String;)V", false);
         mv.visitLabel(endLabel);
     }
@@ -151,12 +151,12 @@ class JRIEXTMethodVisitor extends AdviceAdapter implements Opcodes{
     }
 
     private void logDelimiter() {
-        mv.visitLdcInsn(DDELIM);
+        mv.visitLdcInsn(InstApp.DDELIM);
         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false);
     }
 
     private void logObjectId() {
-        if(isStatic()) logStringValue("<static:" + monitoringUnit.getClassName() + ">");
+        if(isStatic()) logStringValue(InstApp.STATIC + monitoringUnit.getClassName() + ">");
         else {
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "hashCode", "()I", false);
