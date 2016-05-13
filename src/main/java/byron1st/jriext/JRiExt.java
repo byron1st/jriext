@@ -3,12 +3,14 @@ package byron1st.jriext;
 import byron1st.jriext.instrumentation.InstApp;
 import byron1st.jriext.instrumentation.MonitoringUnit;
 import byron1st.jriext.run.ProcessDeathDetector;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -81,17 +83,6 @@ public class JRiExt {
         ArrayList<String> librariesList = new ArrayList<>();
         parsedList.forEach((library) -> librariesList.add((String) library));
         return librariesList;
-    }
-
-    private HashMap<String, String> extractMainClassNames(JSONArray parsedList) throws ClassCastException {
-        HashMap<String, String> returnedMap = new HashMap<>();
-        for (Object o : parsedList) {
-            JSONObject runObj = (JSONObject) o;
-            String shortcut = (String) runObj.get(RUN_SHORTCUT);
-            String mainClassName = (String) runObj.get(RUN_MAINCLASSNAME);
-            returnedMap.put(shortcut, mainClassName);
-        }
-        return returnedMap;
     }
 
     private Path classpath;
@@ -185,7 +176,6 @@ public class JRiExt {
             throw new ProcessRunException("Files for recording cannot be created in the cache folder.");
         }
 
-
         String xbootclasspathCmd = InstApp.CACHE_ROOT.toString();
         for (String library : libraries) {
             xbootclasspathCmd += ":" + library;
@@ -207,7 +197,10 @@ public class JRiExt {
         }
         processes.put(processId, process);
         ProcessDeathDetector deathDetector = new ProcessDeathDetector(process);
-        deathDetector.addListener(() -> processes.remove(processId));
+        deathDetector.addListener(() -> {
+            processes.remove(processId);
+            makeRecordsJSONFile(recordsFileName, monitoringRecordsFile);
+        });
         deathDetector.start();
     }
 
@@ -221,6 +214,26 @@ public class JRiExt {
         ArrayList<String> returnedList = new ArrayList<>();
         processes.keySet().forEach(returnedList::add);
         return returnedList;
+    }
+
+    private HashMap<String, String> extractMainClassNames(JSONArray parsedList) throws ClassCastException {
+        HashMap<String, String> returnedMap = new HashMap<>();
+        for (Object o : parsedList) {
+            JSONObject runObj = (JSONObject) o;
+            String shortcut = (String) runObj.get(RUN_SHORTCUT);
+            String mainClassName = (String) runObj.get(RUN_MAINCLASSNAME);
+            returnedMap.put(shortcut, mainClassName);
+        }
+        return returnedMap;
+    }
+
+    private void makeRecordsJSONFile(String recordsFileName, Path monitoringRecordsFile) throws InstApp.ConvertLogsToJSONException, IOException {
+        ImmutablePair<JSONArray, ArrayList<ImmutablePair<String, String>>> returnedValues = InstApp.convertLogs2JSON(monitoringRecordsFile);
+        Path jsonFileOutput = Paths.get(InstApp.defaultDirName, "records", recordsFileName + ".json");
+        Files.createFile(jsonFileOutput);
+        try(BufferedWriter bw = Files.newBufferedWriter(jsonFileOutput)) {
+            returnedValues.getLeft().writeJSONString(bw);
+        }
     }
 
     private void updateStatus(String message) {

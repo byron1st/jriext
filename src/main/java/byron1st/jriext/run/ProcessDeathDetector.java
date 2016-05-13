@@ -23,7 +23,7 @@ public class ProcessDeathDetector extends Thread {
             for (ProcessListener listener : listeners) {
                 listener.listenProcessDeath();
             }
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
