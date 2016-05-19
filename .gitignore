@@ -7,3 +7,5 @@ build
 jriext_userdata
 gradle
 archived code
+.idea/gradle.xml
+.idea/workspace.xml
