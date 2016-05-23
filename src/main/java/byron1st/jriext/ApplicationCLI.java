@@ -12,6 +12,9 @@ import java.util.Scanner;
 public class ApplicationCLI {
     private static void handleException(Exception e) {
         System.out.println(e.getMessage());
+        if (e instanceof InstApp.ParseMonitoringUnitsException)
+            if (((InstApp.ParseMonitoringUnitsException) e).getOriginalException() != null)
+                ((InstApp.ParseMonitoringUnitsException) e).getOriginalException().printStackTrace();
     }
 
     private static final Options options = new Options();

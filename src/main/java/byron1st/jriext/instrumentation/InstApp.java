@@ -1,6 +1,5 @@
 package byron1st.jriext.instrumentation;
 
-import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -13,7 +12,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.Buffer;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -29,7 +27,13 @@ public class InstApp {
     public static InstApp getInstance() { return instApp; }
 
     public static final class ParseMonitoringUnitsException extends Exception {
+        private Exception originalException;
         ParseMonitoringUnitsException(String message) { super(message); }
+        ParseMonitoringUnitsException(String message, Exception e) { super(message); this.originalException = e;}
+
+        public Exception getOriginalException() {
+            return originalException;
+        }
     }
     public static final class InstrumentationException extends Exception {
         InstrumentationException(String message) { super(message); }
@@ -50,6 +54,7 @@ public class InstApp {
     private static final String VKIND_FIELD = "F";
     private static final String VKIND_RETURN = "R";
     private static final String VKIND_PARAMETER = "P";
+    private static final String VKIND_METHODS = "M";
     private static final String LOC_ENTER= "E";
     private static final String LOC_EXIT= "X";
     private static final String LOC_BOTH= "B";
@@ -113,12 +118,11 @@ public class InstApp {
                 monitoringUnitsList.add(monitoringUnitLeft);
                 if(monitoringUnitRight != null) monitoringUnitsList.add(monitoringUnitRight);
             }
-        } catch (ClassCastException e) { throw new ParseMonitoringUnitsException("Cannot parse the content. Check the syntax."); }
+        } catch (ClassCastException e) { throw new ParseMonitoringUnitsException("Cannot parse the content. Check the syntax.", e); }
         return monitoringUnitsList;
     }
 
     public static ImmutablePair<JSONArray, ArrayList<ImmutablePair<String, String>>> convertLogs2JSON(Path logFile) throws ConvertLogsToJSONException {
-        //TODO: Test!
         ArrayList<ImmutablePair<String, String>> crackedLogs = new ArrayList<>();
         JSONArray jsonConverted = new JSONArray();
         try(BufferedReader br = Files.newBufferedReader(logFile)) {
@@ -199,30 +203,26 @@ public class InstApp {
     private static MonitoringValue buildMonitoringValue(JSONObject monitoringValuesObj) throws ParseMonitoringUnitsException {
         MonitoringValue monitoringValue;
         String type = (String) monitoringValuesObj.get("type");
+        JSONArray methodsList = (JSONArray) monitoringValuesObj.get("methods");
         switch((String) monitoringValuesObj.get("kind")) {
             case VKIND_FIELD: monitoringValue = new MonitoringValueField((String) monitoringValuesObj.get("info"), type); break;
             case VKIND_PARAMETER: monitoringValue = new MonitoringValueParameter((int) monitoringValuesObj.get("info"), type); break;
             case VKIND_RETURN: monitoringValue = new MonitoringValueReturn(type); break;
+            case VKIND_METHODS: monitoringValue = getMonitoringValueMethod((JSONObject) methodsList.get(0)); break;
             default: throw new ParseMonitoringUnitsException("Cannot parse the content. Check its syntax.");
         }
 
-        if (isObject(type)) buildMonitoringValueMethodsChain(monitoringValuesObj, monitoringValue);
+        if (!type.equals("") && isObject(type)) buildMonitoringValueMethodsChain(methodsList, 0, monitoringValue);
+        else if (type.equals("")) buildMonitoringValueMethodsChain(methodsList, 1, monitoringValue);
 
         return monitoringValue;
     }
 
-    private static void buildMonitoringValueMethodsChain(JSONObject monitoringValuesObj, MonitoringValue monitoringValue) throws ParseMonitoringUnitsException {
-        JSONArray methodsList = (JSONArray) monitoringValuesObj.get("methods");
+    private static void buildMonitoringValueMethodsChain(JSONArray methodsList, int fromIdx, MonitoringValue monitoringValue) throws ParseMonitoringUnitsException {
         if (methodsList.size() == 0) throw new ParseMonitoringUnitsException("Cannot parse the content. Check its syntax.");
         MonitoringValueMethod temp = null;
-        for (Object o : methodsList) {
-            JSONObject methodObj = (JSONObject) o;
-            JSONObject methodInfoObj = (JSONObject) methodObj.get("method");
-            String className = (String) methodObj.get("class");
-            boolean isVirtual = (boolean) methodInfoObj.get("isVirtual");
-            String desc = (String) methodInfoObj.get("desc");
-
-            MonitoringValueMethod monitoringValueMethod = new MonitoringValueMethod(isVirtual, className, desc);
+        for (int i = fromIdx; i < methodsList.size(); i++) {
+            MonitoringValueMethod monitoringValueMethod = getMonitoringValueMethod((JSONObject) methodsList.get(i));
             if (temp != null) {
                 temp.setNextMethod(monitoringValueMethod);
                 temp = monitoringValueMethod;
@@ -231,6 +231,15 @@ public class InstApp {
                 temp = monitoringValueMethod;
             }
         }
+    }
+
+    private static MonitoringValueMethod getMonitoringValueMethod(JSONObject jsonObject) {
+        JSONObject methodInfoObj = (JSONObject) jsonObject.get("method");
+        String className = (String) jsonObject.get("class");
+        boolean isVirtual = (boolean) methodInfoObj.get("isVirtual");
+        String desc = (String) methodInfoObj.get("desc");
+
+        return new MonitoringValueMethod(isVirtual, className, desc);
     }
 
     private static boolean isObject(String type) {
@@ -303,7 +312,6 @@ public class InstApp {
     }
 
     private void printClass(String className, ClassWriter classWriter) throws IOException {
-        //TODO: dir 경로 도출하는거, Windows에서는 안될 가능성있음.. path.resolve(className+'.class'); 뭐이런거 생각해보기,
         String fileName;
         String dirName = CACHE_ROOT.toString();
         int del = className.lastIndexOf('/');
