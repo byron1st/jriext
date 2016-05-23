@@ -3,6 +3,7 @@ package byron1st.jriext;
 import byron1st.jriext.instrumentation.InstApp;
 import byron1st.jriext.instrumentation.MonitoringUnit;
 import byron1st.jriext.run.ProcessDeathDetector;
+import byron1st.jriext.util.JRiExtException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -26,14 +27,20 @@ public class JRiExt {
     private JRiExt() {}
     public static JRiExt getInstance() { return jRiExtApp; }
 
-    public static class ConfigFileException extends Exception {
+    public static class ConfigFileException extends JRiExtException {
         ConfigFileException(String message) {
             super(message);
         }
+        ConfigFileException(String message, Exception e) {
+            super(message, e);
+        }
     }
-    public static class ProcessRunException extends Exception {
-        public ProcessRunException(String message) {
+    public static class ProcessRunException extends JRiExtException {
+        ProcessRunException(String message) {
             super(message);
+        }
+        ProcessRunException(String message, Exception e) {
+            super(message, e);
         }
     }
 
@@ -61,9 +68,9 @@ public class JRiExt {
                 monitoringUnitsFile = (String) configObj.get(MONITORING_UNITS); // If it is not a string, 'java.lang.ClassCastException' is thrown.
                 libraries = (JSONArray) configObj.get(LIBRARIES); // If it is not an array, 'java.lang.ClassCastException' is thrown.
                 run = (JSONArray) configObj.get(RUN);
-            } catch(ClassCastException e) { throw new ConfigFileException("The content of the config file is wrong."); }
+            } catch(ClassCastException e) { throw new ConfigFileException("The content of the config file is wrong.", e); }
             if (classpath == null || monitoringUnitsFile == null || libraries == null) throw new ConfigFileException("The content of the config file is wrong.");
-        } catch (IOException | ParseException e) { throw new ConfigFileException("The config file cannot be read."); }
+        } catch (IOException | ParseException e) { throw new ConfigFileException("The config file cannot be read.", e); }
         HashMap<String, Object> returnedMap = new HashMap<>();
         returnedMap.put(CLASSPATH, classpath);
         returnedMap.put(MONITORING_UNITS, monitoringUnitsFile);
@@ -138,7 +145,7 @@ public class JRiExt {
             else updateStatus("External libraries are extracted.");
             mainClassNames = extractMainClassNames((JSONArray) parsedValues.get(RUN));
             updateStatus(mainClassNames.size() + " main classes are extracted.");
-        } catch (ClassCastException e) { throw new ConfigFileException("The content of the config file is wrong."); }
+        } catch (ClassCastException e) { throw new ConfigFileException("The content of the config file is wrong.", e); }
     }
 
     public void instrument() throws InstApp.InstrumentationException, ConfigFileException {
@@ -172,8 +179,7 @@ public class JRiExt {
             Files.createFile(monitoringRecordsFile);
             Files.createFile(monitoringErrorRecordsFile);
         } catch (IOException e) {
-            e.printStackTrace();
-            throw new ProcessRunException("Files for recording cannot be created in the cache folder.");
+            throw new ProcessRunException("Files for recording cannot be created in the cache folder.", e);
         }
 
         String xbootclasspathCmd = InstApp.CACHE_ROOT.toString();
@@ -193,15 +199,20 @@ public class JRiExt {
             count++;
             updateStatus(processId + " is running.");
         } catch (IOException e) {
-            throw new ProcessRunException("A process cannot be run: " + mainClassName);
+            throw new ProcessRunException("A process cannot be run: " + mainClassName, e);
         }
         processes.put(processId, process);
-        ProcessDeathDetector deathDetector = new ProcessDeathDetector(process);
-        deathDetector.addListener(() -> {
-            processes.remove(processId);
-            makeRecordsJSONFile(recordsFileName, monitoringRecordsFile);
-        });
-        deathDetector.start();
+        ProcessDeathDetector deathDetector = null;
+        try {
+            deathDetector = new ProcessDeathDetector(process);
+            deathDetector.addListener(() -> {
+                processes.remove(processId);
+                makeRecordsJSONFile(recordsFileName, monitoringRecordsFile);
+            });
+            deathDetector.start();
+        } catch (ProcessDeathDetector.SubProcessRunException e) {
+            throw new ProcessRunException(e.getMessage(), e);
+        }
     }
 
     public void stopMainClass(String mainClassName) throws ProcessRunException {

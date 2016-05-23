@@ -1,5 +1,6 @@
 package byron1st.jriext.instrumentation;
 
+import byron1st.jriext.util.JRiExtException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -26,20 +27,17 @@ public class InstApp {
     private InstApp() {}
     public static InstApp getInstance() { return instApp; }
 
-    public static final class ParseMonitoringUnitsException extends Exception {
-        private Exception originalException;
+    public static final class ParseMonitoringUnitsException extends JRiExtException {
         ParseMonitoringUnitsException(String message) { super(message); }
-        ParseMonitoringUnitsException(String message, Exception e) { super(message); this.originalException = e;}
-
-        public Exception getOriginalException() {
-            return originalException;
-        }
+        ParseMonitoringUnitsException(String message, Exception e) { super(message, e); }
     }
     public static final class InstrumentationException extends Exception {
         InstrumentationException(String message) { super(message); }
+        InstrumentationException(String message, Exception e) { super(message, e); }
     }
     public static final class ConvertLogsToJSONException extends Exception {
         ConvertLogsToJSONException(String message) { super(message); }
+        ConvertLogsToJSONException(String message, Exception e) { super(message, e); }
     }
 
     public static final String defaultDirName = System.getProperty("user.dir") + File.separator + "jriext_userdata";
@@ -98,7 +96,7 @@ public class InstApp {
         JSONArray monitoringUnitsJsonList;
         try(BufferedReader br = Files.newBufferedReader(monitoringUnitsJson)) {
             monitoringUnitsJsonList = (JSONArray) (new JSONParser()).parse(br);
-        } catch (ParseException | IOException e) { throw new ParseMonitoringUnitsException("Cannot read the monitoring units json file."); }
+        } catch (ParseException | IOException e) { throw new ParseMonitoringUnitsException("Cannot read the monitoring units json file.", e); }
         if(monitoringUnitsJsonList == null) throw new ParseMonitoringUnitsException("Cannot read the monitoring units json file.");
 
         ArrayList<MonitoringUnit> monitoringUnitsList = new ArrayList<>();
@@ -171,7 +169,7 @@ public class InstApp {
                 lineBefore = line;
             }
         } catch (IOException | NumberFormatException e) {
-            throw new ConvertLogsToJSONException("Reading a log file has been failed: " + logFile.toString());
+            throw new ConvertLogsToJSONException("Reading a log file has been failed: " + logFile.toString(), e);
         }
 
         return new ImmutablePair<>(jsonConverted, crackedLogs);
@@ -255,13 +253,13 @@ public class InstApp {
             ClassReader classReader;
             try{
                 classReader = getClassReader(classpath, className);
-            } catch (IOException e) { throw new InstrumentationException("Reading a class is failed: " + className); }
+            } catch (IOException e) { throw new InstrumentationException("Reading a class is failed: " + className, e); }
             ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
             JRIEXTClassVisitor classVisitor = new JRIEXTClassVisitor(classWriter, monitoringUnit, isDebugMode);
             classReader.accept(classVisitor, ClassReader.SKIP_FRAMES);
             try{
                 printClass(className, classWriter);
-            } catch (IOException e) { throw new InstrumentationException("Writing a class to the cache folder is failed: " + className); }
+            } catch (IOException e) { throw new InstrumentationException("Writing a class to the cache folder is failed: " + className, e); }
         }
 
         try{
@@ -287,7 +285,7 @@ public class InstApp {
                     return FileVisitResult.CONTINUE;
                 }
             });
-        } catch (IOException e) { throw new InstrumentationException("Copying classes that are not instrumented is failed."); }
+        } catch (IOException e) { throw new InstrumentationException("Copying classes that are not instrumented is failed.", e); }
 
     }
 

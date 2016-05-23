@@ -1,6 +1,7 @@
 package byron1st.jriext;
 
 import byron1st.jriext.instrumentation.InstApp;
+import byron1st.jriext.util.JRiExtException;
 import org.apache.commons.cli.*;
 
 import java.util.Objects;
@@ -10,11 +11,11 @@ import java.util.Scanner;
  * Created by byron1st on 2016. 5. 6..
  */
 public class ApplicationCLI {
+    private static boolean isDebug = false;
+
     private static void handleException(Exception e) {
         System.out.println(e.getMessage());
-        if (e instanceof InstApp.ParseMonitoringUnitsException)
-            if (((InstApp.ParseMonitoringUnitsException) e).getOriginalException() != null)
-                ((InstApp.ParseMonitoringUnitsException) e).getOriginalException().printStackTrace();
+        if (isDebug) ((JRiExtException) e).printStackTraceAndQuit();
     }
 
     private static final Options options = new Options();
@@ -28,6 +29,7 @@ public class ApplicationCLI {
         options.addOption("h", "help", false, "Print the instruction.");
         options.addOption("runAll", false, "Run all main classes documented in the config file.");
         options.addOption("reset", false, "Reset all details of the configuration.");
+        options.addOption("mode", false, "Change the mode of this program between the normal and the debug mode.");
     }
 
     private static void printLaunchingMessage() {
@@ -81,6 +83,8 @@ public class ApplicationCLI {
                     formatter.printHelp("Use one command at a time.", options);
                 } else if (line.hasOption("reset")) {
                     jRiExt.reset();
+                } else if (line.hasOption("mode")) {
+                    isDebug = !isDebug;
                 } else if (line.hasOption("q")) {
                     System.exit(0);
                 } else if (Objects.equals(line.getArgs()[0], "")) {
