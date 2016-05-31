@@ -151,29 +151,30 @@ public class InstApp {
                     if(!elementsList[3].startsWith(STATIC)) throw new NumberFormatException();
                 }
 
-                JSONArray values = null;
+                JSONObject valueObj = null;
                 if (elementsList.length > META_INFO_SIZE) {
-                    values = new JSONArray();
+                    valueObj = new JSONObject();
                     for (int i = META_INFO_SIZE; i < elementsList.length; i++) {
-                        JSONObject valueObj = new JSONObject();
                         String valueID = valueIDs.get(elementsList[0]).get(i - META_INFO_SIZE);
                         valueObj.put(valueID, elementsList[i]);
-                        values.add(valueObj);
                     }
                 }
 
-                lineObject.put("muID", elementsList[0]);
-                lineObject.put("timestamp", Long.parseLong(elementsList[1]));
-                lineObject.put("threadName", elementsList[2]);
-                lineObject.put("threadId", Integer.parseInt(elementsList[3]));
-                if (objectId == null) lineObject.put("objectId", elementsList[4]);
-                else lineObject.put("objectId", objectId);
-                lineObject.put("className", elementsList[5]);
-                lineObject.put("methodDesc", elementsList[6]);
-                lineObject.put("isEnter", isEnter);
-                if (values != null) lineObject.put("values", values);
-                jsonConverted.add(lineObject);
+                JSONObject metaObj = new JSONObject();
+                metaObj.put("timestamp", Long.parseLong(elementsList[1]));
+                metaObj.put("threadName", elementsList[2]);
+                metaObj.put("threadId", Integer.parseInt(elementsList[3]));
+                if (objectId == null) metaObj.put("objectId", elementsList[4]);
+                else metaObj.put("objectId", objectId);
+                metaObj.put("className", elementsList[5]);
+                metaObj.put("methodDesc", elementsList[6]);
+                metaObj.put("isEnter", isEnter);
 
+                lineObject.put("muID", elementsList[0]);
+                lineObject.put("meta", metaObj);
+                if (valueObj != null) lineObject.put("values", valueObj);
+
+                jsonConverted.add(lineObject);
                 lineBefore = line;
             }
         } catch (IOException | NumberFormatException | ArrayIndexOutOfBoundsException e) {
