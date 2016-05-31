@@ -5,7 +5,7 @@ package byron1st.jriext.instrumentation;
  */
 public class MonitoringValueReturn extends MonitoringValue {
 
-    protected MonitoringValueReturn(String className) {
-        super(className);
+    protected MonitoringValueReturn(String valueID, String className) {
+        super(valueID, className);
     }
 }

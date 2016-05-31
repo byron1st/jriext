@@ -14,12 +14,12 @@ class JRIEXTMethodVisitor extends AdviceAdapter implements Opcodes{
 //    private static final String EXIT = "+X+";
 //    private static final String DDELIM = ",";
 
-    private static MonitoringValueMethod getThreadID = new MonitoringValueMethod(false, "java/lang/Thread", "currentThread()Ljava/lang/Thread;");
-    private static MonitoringValueMethod getThreadName = new MonitoringValueMethod(false, "java/lang/Thread", "currentThread()Ljava/lang/Thread;");
-    private static MonitoringValueMethod getExecutionTime = new MonitoringValueMethod(false, "java/lang/System", "nanoTime()J");
+    private static MonitoringValueMethod getThreadID = new MonitoringValueMethod(false, "java/lang/Thread", "currentThread()Ljava/lang/Thread;", "threadID");
+    private static MonitoringValueMethod getThreadName = new MonitoringValueMethod(false, "java/lang/Thread", "currentThread()Ljava/lang/Thread;", "threadName");
+    private static MonitoringValueMethod getExecutionTime = new MonitoringValueMethod(false, "java/lang/System", "nanoTime()J", "time");
     static {
-        getThreadID.setNextMethod(new MonitoringValueMethod(true, "java/lang/Object", "hashCode()I"));
-        getThreadName.setNextMethod(new MonitoringValueMethod(true, "java/lang/Thread", "getName()Ljava/lang/String;"));
+        getThreadID.setNextMethod(new MonitoringValueMethod(true, "java/lang/Object", "hashCode()I", "threadID"));
+        getThreadName.setNextMethod(new MonitoringValueMethod(true, "java/lang/Thread", "getName()Ljava/lang/String;", "threadName"));
     }
 
     private MonitoringUnit monitoringUnit;

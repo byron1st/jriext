@@ -6,8 +6,8 @@ package byron1st.jriext.instrumentation;
 public class MonitoringValueParameter extends MonitoringValue {
     private int index;
 
-    public MonitoringValueParameter(int index, String className) {
-        super(className);
+    public MonitoringValueParameter(String valueID, int index, String className) {
+        super(valueID, className);
         this.index = index;
     }
 

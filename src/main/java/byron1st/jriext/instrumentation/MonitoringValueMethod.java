@@ -9,8 +9,8 @@ public class MonitoringValueMethod extends MonitoringValue {
     private String methodDesc;
     private String returnType;
 
-    public MonitoringValueMethod(boolean isVirtual, String className, String methodNameDesc) {
-        super(className);
+    public MonitoringValueMethod(boolean isVirtual, String className, String methodNameDesc, String valueID) {
+        super(valueID, className);
         this.isVirtual = isVirtual;
         int index0 = methodNameDesc.indexOf("(");
         int index1 = methodNameDesc.indexOf(")");

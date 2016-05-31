@@ -181,10 +181,11 @@ public class InstApp {
     }
 
     private static ImmutablePair<MonitoringUnit, MonitoringUnit> buildMonitoringUnit(JSONObject monitoringUnitObj) throws ParseMonitoringUnitsException, ClassCastException {
+        String muID = (String) monitoringUnitObj.get("muID");
         String className = (String) monitoringUnitObj.get("class");
         JSONObject methodDefinition = (JSONObject) monitoringUnitObj.get("method");
         String location = (String) monitoringUnitObj.get("location");
-        MonitoringUnit monitoringUnitLeft = new MonitoringUnit(className, (String) methodDefinition.get("desc"), (boolean) methodDefinition.get("isVirtual"));
+        MonitoringUnit monitoringUnitLeft = new MonitoringUnit(muID, className, (String) methodDefinition.get("desc"), (boolean) methodDefinition.get("isVirtual"));
         MonitoringUnit monitoringUnitRight = null;
         switch(location) {
             case LOC_ENTER: monitoringUnitLeft.setEnter(true); break;
@@ -200,27 +201,28 @@ public class InstApp {
 
     private static MonitoringValue buildMonitoringValue(JSONObject monitoringValuesObj) throws ParseMonitoringUnitsException {
         MonitoringValue monitoringValue;
+        String valueID = (String) monitoringValuesObj.get("valueID");
         String type = (String) monitoringValuesObj.get("type");
         JSONArray methodsList = (JSONArray) monitoringValuesObj.get("methods");
         switch((String) monitoringValuesObj.get("kind")) {
-            case VKIND_FIELD: monitoringValue = new MonitoringValueField((String) monitoringValuesObj.get("info"), type); break;
-            case VKIND_PARAMETER: monitoringValue = new MonitoringValueParameter((int) monitoringValuesObj.get("info"), type); break;
-            case VKIND_RETURN: monitoringValue = new MonitoringValueReturn(type); break;
-            case VKIND_METHODS: monitoringValue = getMonitoringValueMethod((JSONObject) methodsList.get(0)); break;
+            case VKIND_FIELD: monitoringValue = new MonitoringValueField(valueID, (String) monitoringValuesObj.get("info"), type); break;
+            case VKIND_PARAMETER: monitoringValue = new MonitoringValueParameter(valueID, (int) monitoringValuesObj.get("info"), type); break;
+            case VKIND_RETURN: monitoringValue = new MonitoringValueReturn(valueID, type); break;
+            case VKIND_METHODS: monitoringValue = getMonitoringValueMethod((JSONObject) methodsList.get(0), valueID); break;
             default: throw new ParseMonitoringUnitsException("Cannot parse the content. Check its syntax.");
         }
 
-        if (!type.equals("") && isObject(type)) buildMonitoringValueMethodsChain(methodsList, 0, monitoringValue);
-        else if (type.equals("")) buildMonitoringValueMethodsChain(methodsList, 1, monitoringValue);
+        if (!type.equals("") && isObject(type)) buildMonitoringValueMethodsChain(methodsList, 0, monitoringValue, valueID);
+        else if (type.equals("")) buildMonitoringValueMethodsChain(methodsList, 1, monitoringValue, valueID);
 
         return monitoringValue;
     }
 
-    private static void buildMonitoringValueMethodsChain(JSONArray methodsList, int fromIdx, MonitoringValue monitoringValue) throws ParseMonitoringUnitsException {
+    private static void buildMonitoringValueMethodsChain(JSONArray methodsList, int fromIdx, MonitoringValue monitoringValue, String valueID) throws ParseMonitoringUnitsException {
         if (methodsList.size() == 0) throw new ParseMonitoringUnitsException("Cannot parse the content. Check its syntax.");
         MonitoringValueMethod temp = null;
         for (int i = fromIdx; i < methodsList.size(); i++) {
-            MonitoringValueMethod monitoringValueMethod = getMonitoringValueMethod((JSONObject) methodsList.get(i));
+            MonitoringValueMethod monitoringValueMethod = getMonitoringValueMethod((JSONObject) methodsList.get(i), valueID);
             if (temp != null) {
                 temp.setNextMethod(monitoringValueMethod);
                 temp = monitoringValueMethod;
@@ -231,13 +233,13 @@ public class InstApp {
         }
     }
 
-    private static MonitoringValueMethod getMonitoringValueMethod(JSONObject jsonObject) {
+    private static MonitoringValueMethod getMonitoringValueMethod(JSONObject jsonObject, String valueID) {
         JSONObject methodInfoObj = (JSONObject) jsonObject.get("method");
         String className = (String) jsonObject.get("class");
         boolean isVirtual = (boolean) methodInfoObj.get("isVirtual");
         String desc = (String) methodInfoObj.get("desc");
 
-        return new MonitoringValueMethod(isVirtual, className, desc);
+        return new MonitoringValueMethod(isVirtual, className, desc, valueID);
     }
 
     private static boolean isObject(String type) {
@@ -286,7 +288,6 @@ public class InstApp {
                 }
             });
         } catch (IOException e) { throw new InstrumentationException("Copying classes that are not instrumented is failed.", e); }
-
     }
 
     private void copyClassFile(Path file) throws IOException {

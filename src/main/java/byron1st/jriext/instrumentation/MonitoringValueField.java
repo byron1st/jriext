@@ -6,8 +6,8 @@ package byron1st.jriext.instrumentation;
 public class MonitoringValueField extends MonitoringValue {
     private String fieldName;
 
-    public MonitoringValueField(String fieldName, String typeClassName) {
-        super(typeClassName);
+    public MonitoringValueField(String valueID, String fieldName, String typeClassName) {
+        super(valueID, typeClassName);
         this.fieldName = fieldName;
     }
 

@@ -6,6 +6,7 @@ import java.util.ArrayList;
  * Created by byron1st on 2016. 1. 7..
  */
 public class MonitoringUnit {
+    private String muID;
     private boolean isEnter;
     private boolean isVirtual;
     private String id;
@@ -15,7 +16,8 @@ public class MonitoringUnit {
     private String returnType;
     private ArrayList<MonitoringValue> monitoringValues = new ArrayList<>();
 
-    public MonitoringUnit(String className, String methodNameDesc, boolean isVirtual) {
+    public MonitoringUnit(String muID, String className, String methodNameDesc, boolean isVirtual) {
+        this.muID = muID;
         this.className = className;
         int index = methodNameDesc.indexOf("(");
         this.methodName = methodNameDesc.substring(0, index);
@@ -23,6 +25,10 @@ public class MonitoringUnit {
         this.returnType = methodNameDesc.substring(methodNameDesc.indexOf(")") + 1);
         this.isVirtual = isVirtual;
         this.id = this.className + "_" + this.methodName + this.methodDesc;
+    }
+
+    public String getMuID() {
+        return muID;
     }
 
     public boolean isEnter() {
@@ -66,7 +72,7 @@ public class MonitoringUnit {
     }
 
     public MonitoringUnit duplicateThisWithOppositeLocation() {
-        MonitoringUnit monitoringUnit = new MonitoringUnit(this.className, this.methodName + this.methodDesc, this.isVirtual);
+        MonitoringUnit monitoringUnit = new MonitoringUnit(this.muID, this.className, this.methodName + this.methodDesc, this.isVirtual);
         monitoringUnit.setEnter(!this.isEnter);
         return monitoringUnit;
     }
