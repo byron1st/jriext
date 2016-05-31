@@ -49,6 +49,8 @@ class JRIEXTMethodVisitor extends AdviceAdapter implements Opcodes{
         if(monitoringUnit.isEnter()) logStringValue(InstApp.ENTER);
         else logStringValue(InstApp.EXIT);
 
+        logStringValue(monitoringUnit.getMuID());
+        logDelimiter();
         log(getExecutionTime, true);
         logDelimiter();
         log(getThreadName, true);

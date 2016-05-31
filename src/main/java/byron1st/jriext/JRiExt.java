@@ -94,6 +94,7 @@ public class JRiExt {
 
     private Path classpath;
     private ArrayList<MonitoringUnit> monitoringUnits;
+    private HashMap<String, ArrayList<String>> valueIDs;
     private ArrayList<String> libraries;
     private HashMap<String, String> mainClassNames;
     private HashMap<String, Process> processes = new HashMap<>();
@@ -139,6 +140,7 @@ public class JRiExt {
             classpath = extractClasspathList((String) parsedValues.get(CLASSPATH));
             updateStatus("Classpaths are extracted.");
             monitoringUnits = InstApp.parse(monitoringUnitsFilePath);
+            valueIDs = buildValueIDs();
             updateStatus("Monitoring units are extracted.");
             libraries = extractLibrariesList((JSONArray) parsedValues.get(LIBRARIES));
             if (libraries.size() == 0) updateStatus("There is no external libarary.");
@@ -146,6 +148,14 @@ public class JRiExt {
             mainClassNames = extractMainClassNames((JSONArray) parsedValues.get(RUN));
             updateStatus(mainClassNames.size() + " main classes are extracted.");
         } catch (ClassCastException e) { throw new ConfigFileException("The content of the config file is wrong.", e); }
+    }
+
+    private HashMap<String, ArrayList<String>> buildValueIDs() {
+        HashMap<String, ArrayList<String>> returnedList = new HashMap<>();
+        if (monitoringUnits != null) {
+            monitoringUnits.forEach(monitoringUnit -> returnedList.put(monitoringUnit.getMuID(), monitoringUnit.getValueIDs()));
+        }
+        return returnedList;
     }
 
     public void instrument() throws InstApp.InstrumentationException, ConfigFileException {
@@ -239,7 +249,7 @@ public class JRiExt {
     }
 
     private void makeRecordsJSONFile(String recordsFileName, Path monitoringRecordsFile) throws InstApp.ConvertLogsToJSONException, IOException {
-        ImmutablePair<JSONArray, ArrayList<ImmutablePair<String, String>>> returnedValues = InstApp.convertLogs2JSON(monitoringRecordsFile);
+        ImmutablePair<JSONArray, ArrayList<ImmutablePair<String, String>>> returnedValues = InstApp.convertLogs2JSON(monitoringRecordsFile, valueIDs);
         Path jsonFileOutput = Paths.get(InstApp.defaultDirName, "records", recordsFileName + ".json");
         Files.createFile(jsonFileOutput);
         try(BufferedWriter bw = Files.newBufferedWriter(jsonFileOutput)) {

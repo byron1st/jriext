@@ -17,6 +17,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 
 /**
@@ -46,6 +47,7 @@ public class InstApp {
     static final String ENTER = "+E+";
     static final String EXIT = "+X+";
     static final int BEGIN_INDEX_LENGTH = 3;
+    static final int META_INFO_SIZE = 7;
     static final String DDELIM = ",";
     static final String STATIC = "<static:";
 
@@ -120,7 +122,7 @@ public class InstApp {
         return monitoringUnitsList;
     }
 
-    public static ImmutablePair<JSONArray, ArrayList<ImmutablePair<String, String>>> convertLogs2JSON(Path logFile) throws ConvertLogsToJSONException {
+    public static ImmutablePair<JSONArray, ArrayList<ImmutablePair<String, String>>> convertLogs2JSON(Path logFile, HashMap<String, ArrayList<String>> valueIDs) throws ConvertLogsToJSONException {
         ArrayList<ImmutablePair<String, String>> crackedLogs = new ArrayList<>();
         JSONArray jsonConverted = new JSONArray();
         try(BufferedReader br = Files.newBufferedReader(logFile)) {
@@ -137,7 +139,7 @@ public class InstApp {
                 }
 
                 String[] elementsList = line.substring(BEGIN_INDEX_LENGTH).split(",");
-                if (elementsList.length < 6) {
+                if (elementsList.length < META_INFO_SIZE) {
                     addCrackedLogs(crackedLogs, line, lineBefore);
                     continue;
                 }
@@ -150,25 +152,31 @@ public class InstApp {
                 }
 
                 JSONArray values = null;
-                if (elementsList.length > 6) {
+                if (elementsList.length > META_INFO_SIZE) {
                     values = new JSONArray();
-                    values.addAll(Arrays.asList(elementsList).subList(6, elementsList.length));
+                    for (int i = META_INFO_SIZE; i < elementsList.length; i++) {
+                        JSONObject valueObj = new JSONObject();
+                        String valueID = valueIDs.get(elementsList[0]).get(i - META_INFO_SIZE);
+                        valueObj.put(valueID, elementsList[i]);
+                        values.add(valueObj);
+                    }
                 }
 
-                lineObject.put("timestamp", Long.parseLong(elementsList[0]));
-                lineObject.put("threadName", elementsList[1]);
-                lineObject.put("threadId", Integer.parseInt(elementsList[2]));
-                if (objectId == null) lineObject.put("objectId", elementsList[3]);
+                lineObject.put("muID", elementsList[0]);
+                lineObject.put("timestamp", Long.parseLong(elementsList[1]));
+                lineObject.put("threadName", elementsList[2]);
+                lineObject.put("threadId", Integer.parseInt(elementsList[3]));
+                if (objectId == null) lineObject.put("objectId", elementsList[4]);
                 else lineObject.put("objectId", objectId);
-                lineObject.put("className", elementsList[4]);
-                lineObject.put("methodDesc", elementsList[5]);
+                lineObject.put("className", elementsList[5]);
+                lineObject.put("methodDesc", elementsList[6]);
                 lineObject.put("isEnter", isEnter);
                 if (values != null) lineObject.put("values", values);
                 jsonConverted.add(lineObject);
 
                 lineBefore = line;
             }
-        } catch (IOException | NumberFormatException e) {
+        } catch (IOException | NumberFormatException | ArrayIndexOutOfBoundsException e) {
             throw new ConvertLogsToJSONException("Reading a log file has been failed: " + logFile.toString(), e);
         }
 

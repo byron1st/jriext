@@ -9,6 +9,7 @@ public class MonitoringUnit {
     private String muID;
     private boolean isEnter;
     private boolean isVirtual;
+    @Deprecated
     private String id;
     private String className;
     private String methodName;
@@ -59,6 +60,7 @@ public class MonitoringUnit {
         return returnType;
     }
 
+    @Deprecated
     public String getId() {
         return id;
     }
@@ -69,6 +71,12 @@ public class MonitoringUnit {
 
     public ArrayList<MonitoringValue> getMonitoringValues() {
         return monitoringValues;
+    }
+
+    public ArrayList<String> getValueIDs() {
+        ArrayList<String> returnedList = new ArrayList<>();
+        monitoringValues.forEach((monitoringValue -> returnedList.add(monitoringValue.getValueID())));
+        return returnedList;
     }
 
     public MonitoringUnit duplicateThisWithOppositeLocation() {
