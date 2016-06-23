@@ -212,7 +212,7 @@ public class InstApp {
         JSONArray methodsList = (JSONArray) monitoringValuesObj.get("methods");
         switch((String) monitoringValuesObj.get("kind")) {
             case VKIND_FIELD: monitoringValue = new MonitoringValueField(valueID, (String) monitoringValuesObj.get("info"), type); break;
-            case VKIND_PARAMETER: monitoringValue = new MonitoringValueParameter(valueID, (int) monitoringValuesObj.get("info"), type); break;
+            case VKIND_PARAMETER: monitoringValue = new MonitoringValueParameter(valueID, (int) (long) monitoringValuesObj.get("info"), type); break;
             case VKIND_RETURN: monitoringValue = new MonitoringValueReturn(valueID, type); break;
             case VKIND_METHODS: monitoringValue = getMonitoringValueMethod((JSONObject) methodsList.get(0), valueID); break;
             default: throw new ParseMonitoringUnitsException("Cannot parse the content. Check its syntax.");
@@ -249,7 +249,7 @@ public class InstApp {
     }
 
     private static boolean isObject(String type) {
-        return type.startsWith("L");
+        return type.startsWith("L") && !type.equals("Ljava/lang/String;");
     }
 
 

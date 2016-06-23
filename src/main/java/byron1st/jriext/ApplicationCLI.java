@@ -11,7 +11,7 @@ import java.util.Scanner;
  * Created by byron1st on 2016. 5. 6..
  */
 public class ApplicationCLI {
-    private static boolean isDebug = false;
+    private static boolean isDebug = true;
     private static final String VERSION = "v2.3.1";
 
     private static void handleException(Exception e) {
