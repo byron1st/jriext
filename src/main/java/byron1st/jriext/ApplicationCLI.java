@@ -12,6 +12,7 @@ import java.util.Scanner;
  */
 public class ApplicationCLI {
     private static boolean isDebug = false;
+    private static final String VERSION = "v2.3.1";
 
     private static void handleException(Exception e) {
         System.out.println(e.getMessage());
@@ -34,11 +35,8 @@ public class ApplicationCLI {
 
     private static void printLaunchingMessage() {
         System.out.println(
-                "/***************************************************JRiExt*********************************************************/\n" +
-                "/* The running folder will be \"" + InstApp.defaultDirName + "\".\n" +
-                "/* If you have additional resources(i.e. images), which are necessary to run the program,\n" +
-                "/* please copy them to appropriate location considering the running folder.\n" +
-                "/******************************************************************************************************************/");
+                "* JRiExtractor" + VERSION + "\n" +
+                "* The running folder will be \"" + InstApp.defaultDirName + "\".\n");
     }
 
     public static void main(String[] args) {
