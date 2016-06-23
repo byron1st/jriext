@@ -27,7 +27,7 @@ public class InstAppTest {
 
     @Test
     public void convertLogs2JSON() throws Exception {
-        Path logPath = Paths.get(Thread.currentThread().getContextClassLoader().getResource("netty/io_netty_example_echo_EchoServer0-1466657407477.murecords").toURI());
+        Path logPath = Paths.get(Thread.currentThread().getContextClassLoader().getResource("netty/io_netty_example_echo_EchoServer0-1466664455235.murecords").toURI());
 
         HashMap<String, ArrayList<String>> returnedList = new HashMap<>();
 

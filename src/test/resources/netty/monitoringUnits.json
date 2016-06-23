@@ -44,6 +44,13 @@
             }
           }
         ]
+      },
+      {
+        "valueID": "New Thread Name",
+        "kind":"P",
+        "info":2,
+        "type":"Ljava/lang/String;",
+        "methods":[]
       }
     ]
   },

@@ -143,9 +143,9 @@ public class InstApp {
 
                 Integer objectId = null;
                 try {
-                    objectId = Integer.parseInt(elementsList[3]);
+                    objectId = Integer.parseInt(elementsList[4]);
                 } catch (NumberFormatException e) {
-                    if(!elementsList[3].startsWith(STATIC)) throw new NumberFormatException();
+                    if(!elementsList[4].startsWith(STATIC)) throw new NumberFormatException();
                 }
 
                 JSONObject valueObj = null;
