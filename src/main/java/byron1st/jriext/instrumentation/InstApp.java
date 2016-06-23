@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -33,11 +32,9 @@ public class InstApp {
         ParseMonitoringUnitsException(String message, Exception e) { super(message, e); }
     }
     public static final class InstrumentationException extends Exception {
-        InstrumentationException(String message) { super(message); }
         InstrumentationException(String message, Exception e) { super(message, e); }
     }
     public static final class ConvertLogsToJSONException extends Exception {
-        ConvertLogsToJSONException(String message) { super(message); }
         ConvertLogsToJSONException(String message, Exception e) { super(message, e); }
     }
 
@@ -126,10 +123,10 @@ public class InstApp {
         ArrayList<ImmutablePair<String, String>> crackedLogs = new ArrayList<>();
         JSONArray jsonConverted = new JSONArray();
         try(BufferedReader br = Files.newBufferedReader(logFile)) {
-            JSONObject lineObject = new JSONObject();
             String line;
             String lineBefore = null;
             while((line = br.readLine()) != null) {
+                JSONObject lineObject = new JSONObject();
                 boolean isEnter;
                 if (line.startsWith(ENTER)) isEnter = true;
                 else if (line.startsWith(EXIT)) isEnter = false;

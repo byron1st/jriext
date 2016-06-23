@@ -1,0 +1,11 @@
+{
+  "classpath":"/Users/byron1st/Downloads/workspace-netty/classpath",
+  "monitoringUnits":"/Users/byron1st/Downloads/workspace-netty/monitoringUnits.json",
+  "libraries":[],
+  "run":[
+    {
+      "shortcut":"echo",
+      "mainClassName":"io/netty/example/echo/EchoServer"
+    }
+  ]
+}
