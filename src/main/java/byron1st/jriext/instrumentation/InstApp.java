@@ -135,7 +135,15 @@ public class InstApp {
                     continue;
                 }
 
-                String[] elementsList = line.substring(BEGIN_INDEX_LENGTH).split(",");
+                String[] elementsList;
+
+                if (line.lastIndexOf("+") != 2) {
+                    elementsList = line.substring(BEGIN_INDEX_LENGTH, line.lastIndexOf("+") - 1).split(",");
+                } else {
+                    elementsList = line.substring(BEGIN_INDEX_LENGTH).split(",");
+                }
+
+
                 if (elementsList.length < META_INFO_SIZE) {
                     addCrackedLogs(crackedLogs, line, lineBefore);
                     continue;
@@ -152,8 +160,10 @@ public class InstApp {
                 if (elementsList.length > META_INFO_SIZE) {
                     valueObj = new JSONObject();
                     for (int i = META_INFO_SIZE; i < elementsList.length; i++) {
-                        String valueID = valueIDs.get(elementsList[0]).get(i - META_INFO_SIZE);
-                        valueObj.put(valueID, elementsList[i]);
+                        if (i - META_INFO_SIZE != 0) { // Check if there is no values.
+                            String valueID = valueIDs.get(elementsList[0]).get(i - META_INFO_SIZE);
+                            valueObj.put(valueID, elementsList[i]);
+                        }
                     }
                 }
 
